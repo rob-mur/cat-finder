@@ -15,6 +15,10 @@ public class Sources
     public async Task<string[]> GetLatestPictures()
     {
         var response = await _client.SearchV2.SearchTweetsAsync("has:images cat");
-        return response.Includes.Media.Where(x => x.Type == "photo").Select(x => x.Url).ToArray();
+        var potentiallySensitiveMediaKeys = response.Tweets.Where(x => x.PossiblySensitive)
+            .SelectMany(x => x.Attachments.MediaKeys).ToArray();
+        return response.Includes.Media
+            .Where(x => x.Type == "photo" && !potentiallySensitiveMediaKeys.Contains(x.MediaKey)).Select(x => x.Url)
+            .ToArray();
     }
 }
