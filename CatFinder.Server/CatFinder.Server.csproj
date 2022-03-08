@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="TwitterSharp" Version="1.5.0" />
+      <PackageReference Include="TweetinviAPI" Version="5.0.4"/>
     </ItemGroup>
 
 </Project>

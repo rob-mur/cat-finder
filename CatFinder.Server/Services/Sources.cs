@@ -1,30 +1,20 @@
-﻿
-using TwitterSharp.Client;
-using TwitterSharp.Request;
-using TwitterSharp.Request.AdvancedSearch;
-using TwitterSharp.Response.RMedia;
-using TwitterSharp.Response.RTweet;
-using TwitterSharp.Rule;
+﻿using Tweetinvi;
 
 namespace CatFinder.Server.Services;
 
 public class Sources
 {
     private readonly TwitterClient _client;
+
     public Sources()
     {
-        _client = new TwitterSharp.Client.TwitterClient("AAAAAAAAAAAAAAAAAAAAAOIFaAEAAAAASR8x255u%2FCUOYC5zP7MsO7Am%2BcU%3DHAMGkBeeHuBnprrkAzlyKanCCHW4Jr6KDlGZLniDGcgsGyNATY");
-
-    }
-    public async void GetLatestPictures()
-    {
-        var streamInfo = _client.AddTweetStreamAsync(new StreamRequest(Expression.HasImages(),"cat"));
-        var onTweetReceived = ScrapeMediaFromTweet;
-        await _client.NextTweetStreamAsync(onTweetReceived, mediaOptions: new MediaOption[] {MediaOption.Url});
+        _client = new TwitterClient("GvNyNOyBNwB0mWx4R51FlSXPA", "pQrYMK5QT7XwtIeBWgCwOnuor7TnO5MekmrATRNUjx1NtogZhT",
+            "846023882-mbroGI8PWBBQYYOE10qXcgoVazzl63kVtKki00JF", "cUeOAfbv6dcttLvadLt1o02rQDHGP0OwQe9kNYSWBehO0");
     }
 
-    private void ScrapeMediaFromTweet(Tweet tweet)
+    public async Task<string[]> GetLatestPictures()
     {
-        var images = tweet.Attachments.Media.Where(x => x.Type == MediaType.Photo).Select(x => x.Url).ToArray();
+        var response = await _client.SearchV2.SearchTweetsAsync("has:images cat");
+        return response.Includes.Media.Where(x => x.Type == "photo").Select(x => x.Url).ToArray();
     }
 }

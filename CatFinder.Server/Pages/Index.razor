@@ -1,9 +1,22 @@
 @page "/"
+@using CatFinder.Server.Services
 
-<PageTitle>Index</PageTitle>
+<PageTitle>CatFinder</PageTitle>
 
-<h1>Hello, world!</h1>
+@foreach (var img in _images)
+{
+    <img src=@img>
+}
 
-Welcome to your new app.
+@code {
+    private readonly Sources _sources = new();
+    private string[] _images = {};
 
-<SurveyPrompt Title="How is Blazor working for you?"/>
+    protected override async Task OnInitializedAsync()
+    {
+        _images = await _sources.GetLatestPictures();
+    }
+
+
+}
+
