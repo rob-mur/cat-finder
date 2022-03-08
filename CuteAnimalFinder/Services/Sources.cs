@@ -28,7 +28,7 @@ public class Sources
         var potentiallySensitiveMediaKeys = response.Tweets.Where(x => x.PossiblySensitive)
             .SelectMany(x => x.Attachments.MediaKeys).ToArray();
         return response.Includes.Media
-            .Where(x => x.Type == "photo" && !potentiallySensitiveMediaKeys.Contains(x.MediaKey)).Select(x => x.Url)
+            .Where(x => x.Type == "photo" && !(potentiallySensitiveMediaKeys.Length > 0 && potentiallySensitiveMediaKeys.Contains(x.MediaKey))).Select(x => x.Url)
             .ToArray();
     }
 }
