@@ -7,18 +7,15 @@
 {
     <img src=@img>
 }
-<a>@_text</a>
 
 @code {
     private readonly Sources _sources = new();
     private string[] _images = {};
-    private string _text = "Loading...";
 
     protected override async Task OnInitializedAsync()
     {
         _images = await _sources.GetLatestPictures("cats");
-        if (_images.Length == 0)
-            _text = "Couldn't connect to twitter";
+      
     }
 
 
