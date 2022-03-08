@@ -1,6 +1,8 @@
 ﻿using Tweetinvi;
+using Tweetinvi.Exceptions;
+using Tweetinvi.Models.V2;
 
-namespace CatFinder.Server.Services;
+namespace CuteAnimalFinder.Services;
 
 public class Sources
 {
@@ -12,9 +14,17 @@ public class Sources
             "846023882-mbroGI8PWBBQYYOE10qXcgoVazzl63kVtKki00JF", "cUeOAfbv6dcttLvadLt1o02rQDHGP0OwQe9kNYSWBehO0");
     }
 
-    public async Task<string[]> GetLatestPictures()
+    public async Task<string[]> GetLatestPictures(string search)
     {
-        var response = await _client.SearchV2.SearchTweetsAsync("has:images cat");
+        SearchTweetsV2Response response;
+        try
+        {
+            response = await _client.SearchV2.SearchTweetsAsync($"has:images {search}");
+        }
+        catch (Exception)
+        {
+            return new string[]{};
+        }
         var potentiallySensitiveMediaKeys = response.Tweets.Where(x => x.PossiblySensitive)
             .SelectMany(x => x.Attachments.MediaKeys).ToArray();
         return response.Includes.Media
