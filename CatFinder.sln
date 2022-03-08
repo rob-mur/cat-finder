@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatFinder.Tests", "tests\CatFinder.Tests\CatFinder.Tests.csproj", "{DB6C457F-67C7-461A-915D-821DF8318A7D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatFinder.Server", "CatFinder.Server\CatFinder.Server.csproj", "{AE4940A3-99B7-4818-9746-8917E51887DE}"
 EndProject
 Global
@@ -10,10 +8,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DB6C457F-67C7-461A-915D-821DF8318A7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DB6C457F-67C7-461A-915D-821DF8318A7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DB6C457F-67C7-461A-915D-821DF8318A7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DB6C457F-67C7-461A-915D-821DF8318A7D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AE4940A3-99B7-4818-9746-8917E51887DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE4940A3-99B7-4818-9746-8917E51887DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE4940A3-99B7-4818-9746-8917E51887DE}.Release|Any CPU.ActiveCfg = Release|Any CPU

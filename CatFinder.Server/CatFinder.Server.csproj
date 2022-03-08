@@ -6,4 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="TwitterSharp" Version="1.5.0" />
+    </ItemGroup>
+
 </Project>
