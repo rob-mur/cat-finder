@@ -14,7 +14,6 @@ public class Sources : ISources
         var twitterTokens = config.GetSection("TwitterTokens").Get<TwitterTokens>();
         _client = new TwitterClient(twitterTokens.ConsumerToken, twitterTokens.ConsumerSecret,
             twitterTokens.AccessToken, twitterTokens.AccessSecret);
-        Console.WriteLine();
     }
 
     public async Task<string[]> GetLatestPictures(string search)

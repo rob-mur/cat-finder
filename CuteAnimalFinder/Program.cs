@@ -1,12 +1,15 @@
+using Azure.Identity;
 using CuteAnimalFinder.Services;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<ISources, Sources>();
+
+if (builder.Environment.IsProduction())
+{
+    builder.Configuration.AddAzureKeyVault(new Uri($"https://{builder.Configuration["KeyVaultName"]}.vault.azure.net/"),new DefaultAzureCredential());
+}
 
 var app = builder.Build();
 
