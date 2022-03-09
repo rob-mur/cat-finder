@@ -1,17 +1,20 @@
-﻿using Tweetinvi;
+﻿using CuteAnimalFinder.Settings;
+using Microsoft.AspNetCore.Components;
+using Tweetinvi;
 using Tweetinvi.Exceptions;
 using Tweetinvi.Models.V2;
 
 namespace CuteAnimalFinder.Services;
 
-public class Sources
+public class Sources : ISources
 {
     private readonly TwitterClient _client;
-
-    public Sources()
+    public Sources(IConfiguration config)
     {
-        _client = new TwitterClient("GvNyNOyBNwB0mWx4R51FlSXPA", "pQrYMK5QT7XwtIeBWgCwOnuor7TnO5MekmrATRNUjx1NtogZhT",
-            "846023882-mbroGI8PWBBQYYOE10qXcgoVazzl63kVtKki00JF", "cUeOAfbv6dcttLvadLt1o02rQDHGP0OwQe9kNYSWBehO0");
+        var twitterTokens = config.GetSection("TwitterTokens").Get<TwitterTokens>();
+        _client = new TwitterClient(twitterTokens.ConsumerToken, twitterTokens.ConsumerSecret,
+            twitterTokens.AccessToken, twitterTokens.AccessSecret);
+        Console.WriteLine();
     }
 
     public async Task<string[]> GetLatestPictures(string search)
@@ -31,4 +34,9 @@ public class Sources
             .Where(x => x.Type == "photo" && !(potentiallySensitiveMediaKeys.Length > 0 && potentiallySensitiveMediaKeys.Contains(x.MediaKey))).Select(x => x.Url)
             .ToArray();
     }
+}
+
+public interface ISources
+{
+    Task<string[]> GetLatestPictures(string search);
 }

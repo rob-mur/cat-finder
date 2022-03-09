@@ -1,5 +1,6 @@
 @page "/"
 @using CuteAnimalFinder.Services
+@inject ISources _sources
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
@@ -9,7 +10,6 @@
 }
 <a>@_text</a>
 @code {
-    private readonly Sources _sources = new();
     private string[] _images = {};
     private string _text = "Loading...";
 
