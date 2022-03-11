@@ -27,10 +27,13 @@ public class Sources : ISources
         {
             return new string[]{};
         }
-        var potentiallySensitiveMediaKeys = response.Tweets.Where(x => x.PossiblySensitive)
-            .SelectMany(x => x.Attachments.MediaKeys).ToArray();
+
+        var sensitiveTweets = response.Tweets.Where(x => x.PossiblySensitive).ToArray();
+        if (sensitiveTweets.Length == 0)
+            return response.Includes.Media.Where(x => x.Type == "photo").Select(x => x.Url).ToArray();
+        var sensitiveMediaKeys = sensitiveTweets.SelectMany(x => x.Attachments.MediaKeys);
         return response.Includes.Media
-            .Where(x => x.Type == "photo" && !(potentiallySensitiveMediaKeys.Length > 0 && potentiallySensitiveMediaKeys.Contains(x.MediaKey))).Select(x => x.Url)
+            .Where(x => x.Type == "photo" && !sensitiveMediaKeys.Contains(x.MediaKey)).Select(x => x.Url)
             .ToArray();
     }
 }
