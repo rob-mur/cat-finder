@@ -25,13 +25,13 @@ public class Sources : ISources
         }
         catch (Exception)
         {
-            return new string[]{};
+            return Array.Empty<string>();
         }
 
         var sensitiveTweets = response.Tweets.Where(x => x.PossiblySensitive).ToArray();
         if (sensitiveTweets.Length == 0)
             return response.Includes.Media.Where(x => x.Type == "photo").Select(x => x.Url).ToArray();
-        var sensitiveMediaKeys = sensitiveTweets.SelectMany(x => x.Attachments.MediaKeys);
+        var sensitiveMediaKeys = sensitiveTweets.Where(x=>x.Attachments != null).Where(x => x.Attachments.MediaKeys != null).SelectMany(x => x.Attachments.MediaKeys);
         return response.Includes.Media
             .Where(x => x.Type == "photo" && !sensitiveMediaKeys.Contains(x.MediaKey)).Select(x => x.Url)
             .ToArray();
