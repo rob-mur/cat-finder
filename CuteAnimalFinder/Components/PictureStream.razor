@@ -1,4 +1,4 @@
-@page "/dogs"
+﻿@namespace CuteAnimalFinder.Components
 @using CuteAnimalFinder.Services
 @inject ISources _sources
 
@@ -10,14 +10,14 @@
 }
 <a>@_text</a>
 @code {
+    [Parameter] public string? Search { get; set; }
     private string[] _images = {};
     private string _text = "Loading...";
 
     protected override async Task OnInitializedAsync()
     {
-        _images = await _sources.GetLatestPictures("dogs");
+        _images = await _sources.GetLatestPictures(Search!);
         _text = _images.Length == 0 ? "Couldn't connect to Twitter" : "";
     }
 
 }
-

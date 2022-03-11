@@ -1,24 +1,4 @@
 @page "/"
-@using CuteAnimalFinder.Services
-@inject ISources _sources
-
-<PageTitle>CuteAnimalFinder</PageTitle>
-
-@foreach (var img in _images)
-{
-    <img src=@img>
-}
-<a>@_text</a>
-@code {
-    private string[] _images = {};
-    private string _text = "Loading...";
-
-    protected override async Task OnInitializedAsync()
-    {
-        _images = await _sources.GetLatestPictures("cats");
-        _text = _images.Length == 0 ? "Couldn't connect to Twitter" : "";
-    }
-
-
-}
+@using CuteAnimalFinder.Components
+<PictureStream Search="cats"></PictureStream>
 
