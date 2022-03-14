@@ -9,9 +9,10 @@
 <component type="typeof(App)" render-mode="Server"/>
 
 <script>
+
 window.onScrolled = (dotNetHelper)=>{
-    document.addEventListener("scroll",function (e){
-        dotNetHelper.invokeMethodAsync("OnScroll");
+    window.addEventListener("scroll",function (e){
+            dotNetHelper.invokeMethodAsync("OnScroll");
     });
 }
 

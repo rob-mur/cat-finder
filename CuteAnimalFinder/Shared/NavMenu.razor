@@ -38,7 +38,7 @@
         _collapseNavMenu = !_collapseNavMenu;
     }
 
-    private double _lastScrollTop = 0;
+    private int _lastScrollTop = 0;
     private DotNetObjectReference<NavMenu>? _dotNetHelper;
 
     protected override async Task OnInitializedAsync()
@@ -50,9 +50,11 @@
     [JSInvokable]
     public async Task OnScroll()
     {
-        var scrollTop = await _jsRuntime.InvokeAsync<double>("getScrollY");
-        _navBarScrollCssClass = scrollTop < _lastScrollTop ? "scrolled-up" : "scrolled-down";
         _collapseNavMenu = true;
+        var scrollTop = await _jsRuntime.InvokeAsync<int>("getScrollY");
+        if (scrollTop != _lastScrollTop)
+            _navBarScrollCssClass = scrollTop < _lastScrollTop ? "scrolled-up" : "scrolled-down";
+        //Console.WriteLine($"Packet sent at {DateTime.Now} with y {_lastScrollTop} and calc {_navBarScrollCssClass}");
         _lastScrollTop = scrollTop;
         StateHasChanged();
     }
