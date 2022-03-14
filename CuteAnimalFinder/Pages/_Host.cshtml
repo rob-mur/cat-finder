@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Microsoft.JSInterop
 @namespace CuteAnimalFinder.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
@@ -6,3 +7,16 @@
 }
 
 <component type="typeof(App)" render-mode="Server"/>
+
+<script>
+window.onScrolled = (dotNetHelper)=>{
+    document.addEventListener("scroll",function (e){
+        dotNetHelper.invokeMethodAsync("OnScroll");
+    });
+}
+
+function getScrollY(){
+        return window.scrollY; 
+    }
+</script>
+

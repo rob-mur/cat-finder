@@ -1,13 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">CuteAnimalFinder</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿@using CuteAnimalFinder.Services
+@inject IJSRuntime _jsRuntime
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass fixed-top purple" @onclick="ToggleNavMenu">
+    <div class="spacer">&nbsp;</div>
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
@@ -21,15 +16,50 @@
         </div>
     </nav>
 </div>
+<nav class="top-row ps-3 navbar navbar-dark fixed-top purple @_navBarScrollCssClass">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">CuteAnimalFinder</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+
+
 
 @code {
-    private bool collapseNavMenu = true;
+    private bool _collapseNavMenu = true;
+    private string _navBarScrollCssClass = "scrolled-up";
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        _collapseNavMenu = !_collapseNavMenu;
+    }
+
+    private double _lastScrollTop = 0;
+    private DotNetObjectReference<NavMenu>? _dotNetHelper;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dotNetHelper = DotNetObjectReference.Create(this);
+        await _jsRuntime.InvokeAsync<Task>("onScrolled", _dotNetHelper);
+    }
+
+    [JSInvokable]
+    public async Task OnScroll()
+    {
+        var scrollTop = await _jsRuntime.InvokeAsync<double>("getScrollY");
+        _navBarScrollCssClass = scrollTop < _lastScrollTop ? "scrolled-up" : "scrolled-down";
+        _collapseNavMenu = true;
+        _lastScrollTop = scrollTop;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _dotNetHelper?.Dispose();
     }
 
 }
