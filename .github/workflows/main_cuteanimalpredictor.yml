@@ -16,9 +16,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Change to the python folder
-        run: cd CutePredictionAPI
 
       - name: Set up Python version
         uses: actions/setup-python@v1
@@ -27,6 +24,7 @@ jobs:
 
       - name: Create and start virtual environment
         run: |
+          cd CutePredictionAPI
           python -m venv venv
           source venv/bin/activate
       
