@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Change to the python folder
-      - run: cd CutePredictionAPI
+        run: cd CutePredictionAPI
 
       - name: Set up Python version
         uses: actions/setup-python@v1
