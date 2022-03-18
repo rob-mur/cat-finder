@@ -1,4 +1,5 @@
-﻿using CuteAnimalFinder.Settings;
+﻿using CuteAnimalFinder.Models;
+using CuteAnimalFinder.Settings;
 using Microsoft.AspNetCore.Components;
 using Tweetinvi;
 using Tweetinvi.Exceptions;
@@ -16,12 +17,12 @@ public class Sources : ISources
             twitterTokens.AccessToken, twitterTokens.AccessSecret);
     }
 
-    public async Task<string[]> GetLatestPictures(string search)
+    public async Task<string[]> GetLatestPictures(Animal search)
     {
         SearchTweetsV2Response response;
         try
         {
-            response = await _client.SearchV2.SearchTweetsAsync($"has:images {search}");
+            response = await _client.SearchV2.SearchTweetsAsync($"has:images {search.ToString()}");
         }
         catch (Exception)
         {
@@ -40,5 +41,5 @@ public class Sources : ISources
 
 public interface ISources
 {
-    Task<string[]> GetLatestPictures(string search);
+    Task<string[]> GetLatestPictures(Animal search);
 }
