@@ -36,4 +36,5 @@ def download_and_predict(url: str):
             result = np.where(result == 1.)
             return result[0].item(0)
     except UnidentifiedImageError:
+        print("PIL Couldn't open the image")
         return 2
