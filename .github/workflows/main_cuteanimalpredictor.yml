@@ -41,8 +41,8 @@ jobs:
         with:
           name: python-app
           path: |
-            . 
-            !venv/
+            ./CutePredictionAPI/
+            !./CutePredictionAPI/venv/
 
   deploy:
     runs-on: ubuntu-latest
