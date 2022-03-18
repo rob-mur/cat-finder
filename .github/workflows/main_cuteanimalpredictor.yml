@@ -10,6 +10,9 @@ on:
       - main
   workflow_dispatch:
 
+defaults:
+  working-directory: ./CutePredictionAPI
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +27,6 @@ jobs:
 
       - name: Create and start virtual environment
         run: |
-          cd CutePredictionAPI
           python -m venv venv
           source venv/bin/activate
       
