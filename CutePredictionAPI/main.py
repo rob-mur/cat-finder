@@ -6,13 +6,19 @@ import numpy as np
 from PIL import UnidentifiedImageError
 
 from keras_preprocessing.image import load_img, img_to_array
+from requests.adapters import HTTPAdapter, Retry
 from tensorflow import keras
 
 from fastapi import FastAPI, Query
 
 app = FastAPI()
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0'}
 
 model = keras.models.load_model("cat_dog_neither.h5")
+
+s = requests.Session()
+retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+s.mount('http://', HTTPAdapter(max_retries=retries))
 
 
 @app.get("/predict/")
@@ -22,7 +28,7 @@ async def predict(urls: List[str] = Query(None)):
 
 def download_and_predict(url: str):
     try:
-        image_data = requests.get(url).content
+        image_data = s.get(url, headers=headers).content
         with tempfile.TemporaryDirectory() as tempDir:
             file_name = os.path.join(tempDir, "image.jpg")
             with open(file_name, 'wb') as tempFile:
@@ -37,4 +43,7 @@ def download_and_predict(url: str):
             return result[0].item(0)
     except UnidentifiedImageError:
         print("PIL Couldn't open the image")
+        return 2
+    except ConnectionError:
+        print("Couldn't download the image")
         return 2
