@@ -11,11 +11,7 @@
     <ItemGroup>
       <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.1" />
       <PackageReference Include="Azure.Identity" Version="1.6.0-beta.1" />
-      <PackageReference Include="Keras.NET" Version="3.8.5" />
       <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0-preview.1.22076.8" />
-      <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.7.0" />
-      <PackageReference Include="TensorFlow.Keras" Version="0.7.0" />
-      <PackageReference Include="TensorFlow.NET" Version="0.70.1" />
       <PackageReference Include="TweetinviAPI" Version="5.0.4" />
     </ItemGroup>
 
