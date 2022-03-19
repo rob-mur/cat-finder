@@ -24,7 +24,7 @@ jobs:
        uses: docker/build-push-action@v2
        with:
          context: ./CutePredictionAPI
-         file: ./Dockerfile
+         file: ./CutePredictionAPI/Dockerfile
          push: true
          tags: rmurphy599/cutepredictor:latest
      -
