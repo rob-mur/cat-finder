@@ -1,4 +1,4 @@
-name: CI to Docker Hub
+name: Publish to Azure
  
 on:
   workflow_run:
