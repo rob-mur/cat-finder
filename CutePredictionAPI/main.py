@@ -40,10 +40,13 @@ def download_and_predict(url: str):
             image_array -= [123.68, 116.779, 103.939]
             result = model.predict(image_array)[0]
             result = np.where(result == 1.)
+            if len(result[0]) == 0:
+                print("model couldn't decide a photo")
+                return 2
             return result[0].item(0)
     except UnidentifiedImageError:
         print("PIL Couldn't open the image")
         return 2
-    except ConnectionError:
+    except requests.exceptions.ConnectionError:
         print("Couldn't download the image")
         return 2
