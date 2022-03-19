@@ -15,8 +15,7 @@ on:
           uses: actions/checkout@v2
 
         - name: Install Docker Compose CLI
-          run: >
-            curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
+          run: curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
 
         - name: "login azure"
           run: "docker login azure --client-id $AZURE_CLIENT_ID --client-secret $AZURE_CLIENT_SECRET --tenant-id $AZURE_TENANT_ID"
@@ -26,7 +25,7 @@ on:
             AZURE_CLIENT_SECRET: '${{ secrets.AZURE_CLIENT_SECRET }}'
 
         - name: "Create an aci context"
-            run: 'docker context create aci --subscription-id $AZURE_SUBSCRIPTION_ID --resource-group simplewhale --location uksouth acicontext'
+            run: 'docker context create aci --subscription-id $AZURE_SUBSCRIPTION_ID --resource-group cuteanimalfinder_group --location westeurope acicontext'
             env:
               AZURE_SUBSCRIPTION_ID: '${{ secrets.AZURE_SUBSCRIPTION_ID }}'
 
