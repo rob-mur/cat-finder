@@ -22,7 +22,6 @@ jobs:
         env:
           AZURE_TENANT_ID: '${{ secrets.AZURE_TENANT_ID }}'
           AZURE_CLIENT_ID: '${{ secrets.AZURE_CLIENT_ID }}'
-          AZURE_CLIENT_SECRET: '${{ secrets.AZURE_CLIENT_SECRET }}'
 
       - name: "Create an aci context"
         run: 'docker context create aci --subscription-id $AZURE_SUBSCRIPTION_ID --resource-group cuteanimalfinder_group --location westeurope acicontext'
