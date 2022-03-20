@@ -29,7 +29,6 @@ async def predict(urls: List[str] = Query(None)):
         input_path = os.path.join(tempDir, "inputs")
         os.mkdir(input_path)
         await download_files(input_path, urls)
-        print("I managed to download the files: + " + os.listdir(input_path))
         generator = datagen.flow_from_directory(
             tempDir,
             target_size=(224, 224),
@@ -41,6 +40,7 @@ async def predict(urls: List[str] = Query(None)):
             idx = int(Path(filename).stem)
             prediction = model_predictions[i]
             prediction = np.where(prediction >= 0.9)
+            print(prediction)
             if len(prediction[0]) == 0:
                 print("model couldn't decide a photo")
             else:
