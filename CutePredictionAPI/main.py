@@ -35,6 +35,7 @@ async def predict(urls: List[str] = Query(None)):
             shuffle=False,
             batch_size=1)
         filenames = generator.filenames
+        print(f"Successfully downloaded {len(filenames)} files")
         model_predictions = model.predict(generator, steps=len(filenames))
         for i, filename in enumerate(filenames):
             idx = int(Path(filename).stem)
