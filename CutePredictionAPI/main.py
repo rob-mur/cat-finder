@@ -29,6 +29,7 @@ async def predict(urls: List[str] = Query(None)):
         input_path = os.path.join(tempDir, "inputs")
         os.mkdir(input_path)
         await download_files(input_path, urls)
+        print("I managed to download the files: + " + os.listdir(input_path))
         generator = datagen.flow_from_directory(
             tempDir,
             target_size=(224, 224),
