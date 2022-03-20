@@ -1,15 +1,14 @@
-from typing import List
-import requests
-import tempfile
 import os
-import numpy as np
-from PIL import UnidentifiedImageError
+import tempfile
+from pathlib import Path
+from typing import List
 
-from keras_preprocessing.image import load_img, img_to_array
+import numpy as np
+import requests
+from fastapi import FastAPI, Query
+from keras_preprocessing.image import ImageDataGenerator
 from requests.adapters import HTTPAdapter, Retry
 from tensorflow import keras
-
-from fastapi import FastAPI, Query
 
 app = FastAPI()
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0'}
@@ -23,30 +22,42 @@ s.mount('http://', HTTPAdapter(max_retries=retries))
 
 @app.get("/predict/")
 async def predict(urls: List[str] = Query(None)):
-    return [download_and_predict(url) for url in urls]
-
-
-def download_and_predict(url: str):
-    try:
-        image_data = s.get(url, headers=headers).content
-        with tempfile.TemporaryDirectory() as tempDir:
-            file_name = os.path.join(tempDir, "image.jpg")
-            with open(file_name, 'wb') as tempFile:
-                tempFile.write(image_data)
-            photo = load_img(file_name, target_size=(224, 224))
-            image_array = img_to_array(photo)
-            image_array = image_array.reshape(1, 224, 224, 3)
-            image_array = image_array.astype('float32')
-            image_array -= [123.68, 116.779, 103.939]
-            result = model.predict(image_array)[0]
-            result = np.where(result == 1.)
-            if len(result[0]) == 0:
+    predictions = [2] * len(urls)
+    datagen = ImageDataGenerator(rescale=1.0 / 255.0)
+    datagen.mean = [123.68, 116.779, 103.939]
+    with tempfile.TemporaryDirectory() as tempDir:
+        input_path = os.path.join(tempDir, "inputs")
+        os.mkdir(input_path)
+        await download_files(input_path, urls)
+        generator = datagen.flow_from_directory(
+            tempDir,
+            target_size=(224, 224),
+            shuffle=False,
+            batch_size=1)
+        filenames = generator.filenames
+        model_predictions = model.predict(generator, steps=len(filenames))
+        for i, filename in enumerate(filenames):
+            idx = int(Path(filename).stem)
+            prediction = model_predictions[i]
+            prediction = np.where(prediction >= 0.9)
+            if len(prediction[0]) == 0:
                 print("model couldn't decide a photo")
-                return 2
-            return result[0].item(0)
-    except UnidentifiedImageError:
-        print("PIL Couldn't open the image")
-        return 2
-    except requests.exceptions.ConnectionError:
-        print("Couldn't download the image")
-        return 2
+            else:
+                predictions[idx] = prediction[0].item(0)
+    return predictions
+
+
+async def download_files(tempDir, urls):
+    for i, url in enumerate(urls):
+        try:
+            await download_file(i, tempDir, url)
+        except requests.exceptions.ConnectionError:
+            print("Couldn't download file")
+
+
+async def download_file(i, tempDir, url):
+    image_data = s.get(url, headers=headers).content
+    file_name = os.path.join(tempDir, str(i) + ".jpg")
+    with open(file_name, 'wb') as tempFile:
+        tempFile.write(image_data)
+
