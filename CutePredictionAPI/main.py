@@ -39,7 +39,7 @@ async def make_predictions(urls):
             shuffle=False,
             batch_size=download_count)
         filenames = generator.filenames
-        model_predictions = model.predict(generator, steps=len(filenames))
+        model_predictions = model.predict(generator, steps=1)
         model_predictions = np.argmax(model_predictions, axis=1)
         for i, filename in enumerate(filenames):
             idx = int(Path(filename).stem)
