@@ -28,7 +28,7 @@ async def predict(urls: List[str] = Query(None)):
 
 async def make_predictions(urls):
     predictions = [2] * len(urls)
-    datagen = ImageDataGenerator(rescale=1.0 / 255.0)
+    datagen = ImageDataGenerator()
     with tempfile.TemporaryDirectory() as tempDir:
         input_path = os.path.join(tempDir, "inputs")
         os.mkdir(input_path)
@@ -48,14 +48,14 @@ async def make_predictions(urls):
 
 
 async def download_files(tempDir, urls):
-    succeeded_downlaods = 0
+    succeeded_downloads = 0
     for i, url in enumerate(urls):
         try:
             await download_file(i, tempDir, url)
-            succeeded_downlaods += 1
+            succeeded_downloads += 1
         except requests.exceptions.ConnectionError:
             print("Couldn't download file")
-    return succeeded_downlaods
+    return succeeded_downloads
 
 
 async def download_file(i, tempDir, url):
