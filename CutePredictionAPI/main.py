@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 from typing import List
 
+
 import numpy as np
 import requests
 from fastapi import FastAPI, Query
@@ -22,6 +23,10 @@ s.mount('http://', HTTPAdapter(max_retries=retries))
 
 @app.get("/predict/")
 async def predict(urls: List[str] = Query(None)):
+    return await make_predictions(urls)
+
+
+async def make_predictions(urls):
     predictions = [2] * len(urls)
     datagen = ImageDataGenerator(rescale=1.0 / 255.0)
     datagen.mean = [123.68, 116.779, 103.939]
@@ -35,17 +40,11 @@ async def predict(urls: List[str] = Query(None)):
             shuffle=False,
             batch_size=1)
         filenames = generator.filenames
-        print(f"Successfully downloaded {len(filenames)} files")
-        model_predictions = model.predict(generator, steps=len(filenames))
+        model_predictions = model.predict(generator, steps=len(filenames), verbose=1)
+        model_predictions = np.argmax(model_predictions, axis=1)
         for i, filename in enumerate(filenames):
             idx = int(Path(filename).stem)
-            prediction = model_predictions[i]
-            prediction = np.where(prediction >= 0.9)
-            print(prediction)
-            if len(prediction[0]) == 0:
-                print("model couldn't decide a photo")
-            else:
-                predictions[idx] = prediction[0].item(0)
+            predictions[idx] = model_predictions[i].item()
     return predictions
 
 
