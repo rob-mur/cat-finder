@@ -29,14 +29,13 @@ async def predict(urls: List[str] = Query(None)):
 async def make_predictions(urls):
     predictions = [2] * len(urls)
     datagen = ImageDataGenerator(rescale=1.0 / 255.0)
-    datagen.mean = [123.68, 116.779, 103.939]
     with tempfile.TemporaryDirectory() as tempDir:
         input_path = os.path.join(tempDir, "inputs")
         os.mkdir(input_path)
         await download_files(input_path, urls)
         generator = datagen.flow_from_directory(
             tempDir,
-            target_size=(224, 224),
+            target_size=(150, 150),
             shuffle=False,
             batch_size=1)
         filenames = generator.filenames
