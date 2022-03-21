@@ -32,14 +32,14 @@ async def make_predictions(urls):
     with tempfile.TemporaryDirectory() as tempDir:
         input_path = os.path.join(tempDir, "inputs")
         os.mkdir(input_path)
-        await download_files(input_path, urls)
+        download_count = await download_files(input_path, urls)
         generator = datagen.flow_from_directory(
             tempDir,
             target_size=(150, 150),
             shuffle=False,
-            batch_size=1)
+            batch_size=download_count)
         filenames = generator.filenames
-        model_predictions = model.predict(generator, steps=len(filenames), verbose=1)
+        model_predictions = model.predict(generator, steps=len(filenames))
         model_predictions = np.argmax(model_predictions, axis=1)
         for i, filename in enumerate(filenames):
             idx = int(Path(filename).stem)
@@ -48,11 +48,14 @@ async def make_predictions(urls):
 
 
 async def download_files(tempDir, urls):
+    succeeded_downlaods = 0
     for i, url in enumerate(urls):
         try:
             await download_file(i, tempDir, url)
+            succeeded_downlaods += 1
         except requests.exceptions.ConnectionError:
             print("Couldn't download file")
+    return succeeded_downlaods
 
 
 async def download_file(i, tempDir, url):
