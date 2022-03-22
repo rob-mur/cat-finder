@@ -3,7 +3,6 @@ import tempfile
 from pathlib import Path
 from typing import List
 
-
 import numpy as np
 import requests
 from fastapi import FastAPI, Query
@@ -17,8 +16,13 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/201
 model = keras.models.load_model("cat_dog_neither.h5")
 
 s = requests.Session()
-retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
 s.mount('http://', HTTPAdapter(max_retries=retries))
+
+
+@app.get("/health/")
+async def health_check():
+    return "Service available"
 
 
 @app.get("/predict/")
@@ -63,4 +67,3 @@ async def download_file(i, tempDir, url):
     file_name = os.path.join(tempDir, str(i) + ".jpg")
     with open(file_name, 'wb') as tempFile:
         tempFile.write(image_data)
-
