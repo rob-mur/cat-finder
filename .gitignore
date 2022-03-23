@@ -1,4 +1,3 @@
 ﻿/CuteAnimalFinder/bin/
 /CuteAnimalFinder/obj/
-/CatDogNeitherClassifier/best_model.h5
-/CuteAnimalFinder/cat_dog_neither.h5
+/**/*.h5
