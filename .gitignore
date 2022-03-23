@@ -1,3 +1,4 @@
 ﻿/CuteAnimalFinder/bin/
 /CuteAnimalFinder/obj/
-/**/*.h5
+**/*.h5
+**/*.pb
