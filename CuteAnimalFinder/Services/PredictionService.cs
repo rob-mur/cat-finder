@@ -5,23 +5,42 @@ namespace CuteAnimalFinder.Services;
 
 public class Prediction : IPrediction
 {
+    private readonly IPredictionCache _cache;
     private readonly string _predictionUrl;
-    public Prediction(IConfiguration config)
+
+    public Prediction(IConfiguration config, IPredictionCache cache)
     {
+        _cache = cache;
         _predictionUrl = config.GetSection("PredictionURL").Value!;
     }
-    public string[] FilterImages(Animal search, string[] images)
+
+    public Dictionary<string, bool> FilterImages(Animal search, string[] images)
     {
-        var query = "?urls=" + String.Join("&urls=", images);
+        var cachedPredictions = _cache.GetPredictions(images);
+        var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
+        var unknownImages = images.Where(x => !cachedPredictions.ContainsKey(x)).ToArray();
+        var result = QueryPredictionApi(unknownImages);
+        var relevantImages = unknownImages.Where((_,i) => (Animal)result[i] == search).ToArray();
+        var filterResult = new Dictionary<string, bool>();
+        foreach (var img in relevantCache)
+            filterResult[img.Key] = true;
+        foreach (var img in relevantImages)
+            filterResult[img] = false;
+        return filterResult;
+    }
+
+    private int[] QueryPredictionApi(string[] images)
+    {
+        var query = "?urls=" + string.Join("&urls=", images);
         using var client = new HttpClient();
         var response = client.GetAsync(new Uri(_predictionUrl + query)).Result;
         var responseString = response.Content.ReadAsStringAsync().Result;
         var result = JsonConvert.DeserializeObject<int[]>(responseString)!;
-        return images.Where((x, i) => result[i] == (int) search).ToArray();
+        return result;
     }
 }
 
 public interface IPrediction
 {
-    string[] FilterImages(Animal search, string[] images);
+    Dictionary<string, bool> FilterImages(Animal search, string[] images);
 }

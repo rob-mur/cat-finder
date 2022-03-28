@@ -1,5 +1,4 @@
-﻿@using CuteAnimalFinder.Services
-@inject IJSRuntime _jsRuntime
+﻿@inject IJSRuntime _jsRuntime
 
 <div class="@NavMenuCssClass fixed-top purple" @onclick="ToggleNavMenu">
     <div class="spacer">&nbsp;</div>
@@ -24,7 +23,6 @@
         </button>
     </div>
 </nav>
-
 
 
 @code {
@@ -54,7 +52,7 @@
         var scrollTop = await _jsRuntime.InvokeAsync<int>("getScrollY");
         if (scrollTop != _lastScrollTop)
             _navBarScrollCssClass = scrollTop < _lastScrollTop ? "scrolled-up" : "scrolled-down";
-        //Console.WriteLine($"Packet sent at {DateTime.Now} with y {_lastScrollTop} and calc {_navBarScrollCssClass}");
+    //Console.WriteLine($"Packet sent at {DateTime.Now} with y {_lastScrollTop} and calc {_navBarScrollCssClass}");
         _lastScrollTop = scrollTop;
         StateHasChanged();
     }

@@ -1,30 +1,69 @@
-﻿@namespace CuteAnimalFinder.Components.PictureStream
+﻿@using Tweetinvi.Core.Extensions
 @using CuteAnimalFinder.Services
 @using CuteAnimalFinder.Models
+@namespace CuteAnimalFinder.Components.PictureStream
 @inject ISources _sources
 @inject IPrediction _prediction
+@inject IPredictionCache _cache
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
 @foreach (var img in _images)
 {
-    <img src=@img alt="" class="card"><br/>
+    <div class="card-holder">
+            @if (!img.Value)
+            {
+                <div class="card">
+
+                <div class="card-top">
+                    <div class="split-left" @onclick="() => Correct(img.Key)">
+                        <i class="bi bi-check" style="color:black"></i>
+                    </div>
+                    <div class="split-right" @onclick="() => Incorrect(img.Key)">
+                        <i class="bi bi-x" style="color:black"></i>
+                    </div>
+                </div>
+                <img src=@img.Key alt="" class="image">
+                                                      </div>
+
+            }
+            else
+            {
+                <img src=@img.Key alt="" class="card">
+            }
+    </div>
 }
 <a>@_text</a>
 
 
 @code {
-    [Parameter] public Animal Search { get; set; }
-    private string[] _images = {};
+
+    [Parameter]
+    public Animal Search { get; set; }
+
+    private Dictionary<string, bool> _images = new();
     private string _text = "Loading...";
 
-   protected override async Task OnInitializedAsync()
-   {
-       _images = await _sources.GetLatestPictures(Search);
-       _text = _images.Length == 0 ? "Couldn't connect to Twitter" : "";
-       if (_images.Length == 0)
-           return;
-       _images = _prediction.FilterImages(Search, _images);
-   }
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await _sources.GetLatestPictures(Search);
+        _images = result.ToDictionary(x => x, _ => false);
+        _text = _images.IsEmpty() ? "Couldn't connect to Twitter" : "";
+        if (_images.IsEmpty())
+            return;
+        _images = _prediction.FilterImages(Search, _images.Keys.ToArray());
+    }
+
+    private void Incorrect(string img)
+    {
+        _cache.AddPrediction(img, Animal.Neither);
+        _images.Remove(img);
+    }
+
+    private void Correct(string img)
+    {
+        _images[img] = true;
+        _cache.AddPrediction(img, Search);
+    }
 
 }

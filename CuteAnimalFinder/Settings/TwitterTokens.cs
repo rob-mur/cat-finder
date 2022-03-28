@@ -1,7 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Newtonsoft.Json;
-
-namespace CuteAnimalFinder.Settings;
+﻿namespace CuteAnimalFinder.Settings;
 
 public class TwitterTokens
 {
