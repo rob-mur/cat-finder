@@ -11,7 +11,7 @@ COPY . .
 
 RUN pip install awscli
 
-RUN aws s3 cp s3://cat-dog-neither-ml/cat_dog_neither.h5 cat_dog_neither.h5
+RUN aws s3 cp s3://cat-dog-neither-ml/cat_dog_neither.tflite cat_dog_neither.tflite
 
 RUN pip install --no-cache-dir --upgrade -r /requirements.txt
 

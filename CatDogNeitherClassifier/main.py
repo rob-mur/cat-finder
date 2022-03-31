@@ -2,7 +2,8 @@ import os
 import sys
 
 import tensorflow as tf
-from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.applications.mobilenet import preprocess_input
 from keras.layers import Dense, Flatten, Dropout, Input
 from keras.models import Model
 from keras.optimizer_v1 import rmsprop
@@ -52,12 +53,11 @@ def load_images(src_root, dest_root, file_type):
 
 
 def define_model():
-    model = InceptionV3(input_shape=(150, 150, 3), include_top=False, weights='imagenet')
+    model = MobileNetV2(input_shape=(150, 150, 3), include_top=False, weights='imagenet')
     for layer in model.layers:
         layer.trainable = False
-    i = Input([None, None, 3], dtype=tf.uint8)
-    x = tf.cast(i, tf.float32)
-    x = tf.keras.applications.inception_v3.preprocess_input(x)
+    i = Input([None, None, 3], dtype=tf.float32)
+    x = preprocess_input(i)
     x = model(x)
 
     x = Flatten()(x)
@@ -72,8 +72,8 @@ def define_model():
 
 
 def productionise_model():
-    es = EarlyStopping(monitor='val_accuracy', mode='max', verbose=1, patience=50)
-    mc = ModelCheckpoint('best_model.h5', monitor='val_accuracy', mode='max')
+    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
+    mc = ModelCheckpoint('best_model.h5', monitor='val_loss', mode='min')
     cb_list = [es, mc]
     # define model
     model = define_model()
@@ -109,6 +109,14 @@ def summarize_diagnostics(history):
     pyplot.close()
 
 
+def optimise_model():
+    model = keras.models.load_model("best_model.h5")
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+    with open("optimised_model.tflite", "wb") as f:
+        f.write(tflite_model)
+
+
 if __name__ == "__main__":
     # define location of dataset
     dataRoot = r"C:\data\cat_dog_neither"
@@ -117,7 +125,7 @@ if __name__ == "__main__":
     resDataRoot = os.path.join(dataRoot, "processed_data")
     resTrainingRoot = os.path.join(resDataRoot, "training_set")
     resTestRoot = os.path.join(resDataRoot, "test_set")
-    finalDataRoot = os.path.join(dataRoot, "finalised_data")
     # resize_images(trainingRoot, resTrainingRoot)
     # resize_images(testRoot, resTestRoot)
     productionise_model()
+    optimise_model()

@@ -14,6 +14,7 @@ app = FastAPI()
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0'}
 
 interpreter = tf.lite.Interpreter("cat_dog_neither.tflite")
+output_details = interpreter.get_output_details()
 
 s = requests.Session()
 retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
@@ -40,20 +41,15 @@ async def make_predictions(urls):
         interpreter.resize_tensor_input(0, [num_files, 150, 150, 3])
         interpreter.allocate_tensors()
         image_names = os.listdir(input_path)
-        images = [read_img(input_path, x) for x in image_names]
+        images = [img_to_array(load_img(os.path.join(input_path, x), target_size=(150, 150))) for x in image_names]
         interpreter.set_tensor(0, images)
         interpreter.invoke()
-        output_data = interpreter.get_tensor(186)
+        output_data = interpreter.get_tensor(output_details[0]['index'])
         for i, prediction in enumerate(output_data):
             model_prediction = np.argmax(prediction)
             idx = int(Path(image_names[i]).stem)
             predictions[idx] = model_prediction.item()
     return predictions
-
-
-def read_img(input_path, img_path):
-    img = load_img(os.path.join(input_path, img_path), target_size=(150, 150))
-    return img_to_array(img).astype(np.uint8)
 
 
 async def download_files(temp_dir, urls):
@@ -67,8 +63,8 @@ async def download_files(temp_dir, urls):
     return succeeded_downloads
 
 
-async def download_file(i, tempDir, url):
+async def download_file(i, temp_dir, url):
     image_data = s.get(url, headers=headers).content
-    file_name = os.path.join(tempDir, str(i) + ".jpg")
+    file_name = os.path.join(temp_dir, str(i) + ".jpg")
     with open(file_name, 'wb') as tempFile:
         tempFile.write(image_data)
