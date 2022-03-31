@@ -7,9 +7,11 @@ namespace CuteAnimalFinder.Services;
 public class PredictionCache : IPredictionCache
 {
     private readonly SqlConnectionStringBuilder _builder;
+    private readonly ILogger<PredictionCache> _logger;
 
-    public PredictionCache()
+    public PredictionCache(ILogger<PredictionCache> logger)
     {
+        _logger = logger;
         _builder = new SqlConnectionStringBuilder
         {
             DataSource = "prediction-cache.database.windows.net",
@@ -27,7 +29,14 @@ public class PredictionCache : IPredictionCache
         command.Parameters.AddWithValue("@url", img);
         command.Parameters.AddWithValue("@prediction", (int) prediction);
         connection.Open();
-        command.ExecuteNonQuery();
+        try
+        {
+            command.ExecuteNonQuery();
+        }
+        catch (SqlException e)
+        {
+            _logger.LogWarning("Sql exception on add Prediction: {Message}", e.Message);
+        }
     }
 
     Dictionary<string, Animal> IPredictionCache.GetPredictions(string[] images)

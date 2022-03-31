@@ -5,6 +5,7 @@
 @inject ISources _sources
 @inject IPrediction _prediction
 @inject IPredictionCache _cache
+@inject ILogger<PictureStream> _logger
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
@@ -47,6 +48,8 @@
     protected override async Task OnInitializedAsync()
     {
         var result = await _sources.GetLatestPictures(Search);
+        _logger.LogInformation("Requested pictures:");
+        result.ForEach(url => _logger.LogInformation("{Url}",url));
         _images = result.ToDictionary(x => x, _ => false);
         _text = _images.IsEmpty() ? "Couldn't connect to Twitter" : "";
         if (_images.IsEmpty())
