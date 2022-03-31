@@ -17,7 +17,8 @@ public class PredictionCache : IPredictionCache
             DataSource = "prediction-cache.database.windows.net",
             UserID = "verybasicusername",
             Password = "verybasicpassword!1",
-            InitialCatalog = "prediction-cache"
+            InitialCatalog = "prediction-cache",
+            ConnectTimeout = 0
         };
     }
 
