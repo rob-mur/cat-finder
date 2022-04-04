@@ -28,7 +28,7 @@ public class PredictionCache : IPredictionCache
         }
         catch (SqlException e)
         {
-            _logger.LogWarning("Sql exception on add Prediction: {Message}", e.Message);
+            _logger.LogWarning("Sql exception on AddPrediction: {Message}", e.Message);
         }
     }
 
@@ -40,14 +40,22 @@ public class PredictionCache : IPredictionCache
         var command = new SqlCommand("GetPredictions", connection);
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@urls", string.Join("|", images));
-        using var objReader = command.ExecuteReader();
-        if (!objReader.HasRows) return predictions;
-        while (objReader.Read())
+        try
         {
-            var url = objReader.GetString(objReader.GetOrdinal("Url"));
-            var prediction = objReader.GetInt32(objReader.GetOrdinal("Prediction"));
-            predictions[url] = (Animal) prediction;
+            using var objReader = command.ExecuteReader();
+            if (!objReader.HasRows) return predictions;
+            while (objReader.Read())
+            {
+                var url = objReader.GetString(objReader.GetOrdinal("Url"));
+                var prediction = objReader.GetInt32(objReader.GetOrdinal("Prediction"));
+                predictions[url] = (Animal) prediction;
+            }
         }
+        catch (SqlException e)
+        {
+            _logger.LogWarning("Sql exception on GetPredictions: {Message}", e.Message);
+        }
+        
 
         return predictions;
     }

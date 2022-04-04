@@ -1,6 +1,8 @@
 import os
 import sys
 
+import PIL
+import requests.exceptions
 import tensorflow as tf
 from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.applications.mobilenet import preprocess_input
@@ -16,12 +18,23 @@ from keras import backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 import keras
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+import pandas as pd
+from random import randint
+from requests.adapters import HTTPAdapter, Retry
 
 tf.compat.v1.disable_eager_execution()
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.compat.v1.Session(config=config)
 K.set_session(session)
+
+prediction_key = {
+    0: "cats",
+    1: "dogs",
+    2: "neither"
+}
+
+tqdm.pandas()
 
 
 def plot():
@@ -40,6 +53,7 @@ def plot():
 
 
 def resize_images(src_root, dest_root):
+    print("Resizing images")
     load_images(src_root, dest_root, "cats")
     load_images(src_root, dest_root, "dogs")
     load_images(src_root, dest_root, "neither")
@@ -47,7 +61,12 @@ def resize_images(src_root, dest_root):
 
 def load_images(src_root, dest_root, file_type):
     for file in tqdm(os.listdir(os.path.join(src_root, file_type))):
-        photo = load_img(os.path.join(src_root, file_type, file), target_size=(150, 150))
+        filename = os.path.join(src_root, file_type, file)
+        try:
+            photo = load_img(filename, target_size=(150, 150))
+        except PIL.UnidentifiedImageError:
+            print("Couldn't identify image: " + filename)
+            continue
         photo = img_to_array(photo)
         save_img(os.path.join(dest_root, file_type, file), photo)
 
@@ -113,8 +132,48 @@ def optimise_model():
     model = keras.models.load_model("best_model.h5")
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
-    with open("optimised_model.tflite", "wb") as f:
+    with open("cat_dog_neither.tflite", "wb") as f:
         f.write(tflite_model)
+
+
+def get_new_predictions():
+    # Delete all old predictions
+    prune_folder(trainingRoot)
+    prune_folder(testRoot)
+    prune_folder(resTrainingRoot)
+    prune_folder(resTestRoot)
+    # Download files to new folders, with 25% test split
+    prediction_data = pd.read_csv("prediction_cache_dbo_Predictions.csv")
+    prediction_data['name'] = "downloaded_" + prediction_data.index.astype(str) + ".jpg"
+    print("Downloading new predictions")
+    prediction_data.progress_apply(lambda x: download_file(x), axis=1)
+
+
+def download_file(x):
+    if randint(0, 3) == 0:
+        root = testRoot
+    else:
+        root = trainingRoot
+
+    download_location = os.path.join(root, prediction_key[x['Prediction']], x['name'])
+    s = requests.Session()
+    retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+    s.mount('http://', HTTPAdapter(max_retries=retries))
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0'}
+    try:
+        image_data = s.get(x['Url'], headers=headers).content
+    except requests.exceptions.ConnectionError:
+        print("Couldn't download file")
+        return
+    with open(download_location, 'wb') as tempFile:
+        tempFile.write(image_data)
+
+
+def prune_folder(root_folder):
+    for folder in os.listdir(root_folder):
+        for file in os.listdir(os.path.join(root_folder, folder)):
+            if file[0:10] == "downloaded":
+                os.remove(os.path.join(root_folder, folder, file))
 
 
 if __name__ == "__main__":
@@ -125,7 +184,8 @@ if __name__ == "__main__":
     resDataRoot = os.path.join(dataRoot, "processed_data")
     resTrainingRoot = os.path.join(resDataRoot, "training_set")
     resTestRoot = os.path.join(resDataRoot, "test_set")
-    # resize_images(trainingRoot, resTrainingRoot)
-    # resize_images(testRoot, resTestRoot)
+    get_new_predictions()
+    resize_images(trainingRoot, resTrainingRoot)
+    resize_images(testRoot, resTestRoot)
     productionise_model()
     optimise_model()
