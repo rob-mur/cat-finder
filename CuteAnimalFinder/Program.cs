@@ -1,15 +1,18 @@
 using Azure.Identity;
 using CuteAnimalFinder.Services;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-// Add services to the container.
+// Scoped services that are unique to each user session
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<ISources, Sources>();
-builder.Services.AddSingleton<IPrediction, Prediction>();
-builder.Services.AddSingleton<IPredictionCache, PredictionCache>();
+builder.Services.AddScoped<ISources, TwitterService>();
+builder.Services.AddScoped<IPrediction, Prediction>();
+builder.Services.AddScoped<IPredictionCache, PredictionCache>();
+builder.Services.AddScoped<IComponentStateService, ComponentStateService>();
+builder.Services.AddMediatR(cfg => cfg.AsScoped(), typeof(Program));
 
 
 if (builder.Environment.IsProduction())

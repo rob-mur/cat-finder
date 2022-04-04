@@ -1,16 +1,19 @@
 ﻿using CuteAnimalFinder.Models;
+using CuteAnimalFinder.Notifications;
 using CuteAnimalFinder.Settings;
+using MediatR;
 using Tweetinvi;
 using Tweetinvi.Models.V2;
 
 namespace CuteAnimalFinder.Services;
 
-public class Sources : ISources
+public class TwitterService : ISources
 {
     private readonly TwitterClient _client;
-
-    public Sources(IConfiguration config)
+    private readonly IMediator _mediator;
+    public TwitterService(IConfiguration config, IMediator mediator)
     {
+        _mediator = mediator;
         var twitterTokens = config.GetSection("TwitterTokens").Get<TwitterTokens>();
         _client = new TwitterClient(twitterTokens.ConsumerToken, twitterTokens.ConsumerSecret,
             twitterTokens.AccessToken, twitterTokens.AccessSecret);
@@ -23,8 +26,9 @@ public class Sources : ISources
         {
             response = await _client.SearchV2.SearchTweetsAsync($"has:images {search.ToString()}");
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            await _mediator.Publish(new TwitterErrorNotification(e.Message));
             return Array.Empty<string>();
         }
 
@@ -33,9 +37,11 @@ public class Sources : ISources
             return response.Includes.Media.Where(x => x.Type == "photo").Select(x => x.Url).ToArray();
         var sensitiveMediaKeys = sensitiveTweets.Where(x => x.Attachments != null)
             .Where(x => x.Attachments.MediaKeys != null).SelectMany(x => x.Attachments.MediaKeys);
-        return response.Includes.Media
+        var results =  response.Includes.Media
             .Where(x => x.Type == "photo" && !sensitiveMediaKeys.Contains(x.MediaKey)).Select(x => x.Url)
             .ToArray();
+        await _mediator.Publish(new TwitterSuccessNotification(results.Length));
+        return results;
     }
 }
 

@@ -1,0 +1,28 @@
+﻿@namespace CuteAnimalFinder.Components
+
+@using CuteAnimalFinder.Notifications
+@using CuteAnimalFinder.Services
+@using MediatR
+@inject IMediator _mediator
+@inject IComponentStateService _state
+
+@foreach (var message in Messages)
+{
+    <a>@message</a>
+    <br/>
+}
+
+@code {
+    public readonly List<string> Messages = new() {"Initialising..."};
+
+    protected override void OnInitialized()
+    {
+        _state.ErrorQueue = this;
+    }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
+}

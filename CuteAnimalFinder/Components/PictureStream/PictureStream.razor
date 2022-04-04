@@ -1,11 +1,16 @@
 ﻿@using Tweetinvi.Core.Extensions
 @using CuteAnimalFinder.Services
 @using CuteAnimalFinder.Models
+@using CuteAnimalFinder.Notifications
+@using MediatR
 @namespace CuteAnimalFinder.Components.PictureStream
 @inject ISources _sources
 @inject IPrediction _prediction
 @inject IPredictionCache _cache
 @inject ILogger<PictureStream> _logger
+@inject IMediator _mediator
+@inject IComponentStateService _state
+
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
@@ -34,7 +39,6 @@
             }
     </div>
 }
-<a>@_text</a>
 
 
 @code {
@@ -43,7 +47,6 @@
     public Animal Search { get; set; }
 
     private Dictionary<string, bool> _images = new();
-    private string _text = "Loading...";
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,11 +54,13 @@
         _logger.LogInformation("Requested pictures:");
         result.ForEach(url => _logger.LogInformation("{Url}",url));
         _images = result.ToDictionary(x => x, _ => false);
-        _text = _images.IsEmpty() ? "Couldn't connect to Twitter" : "";
         if (_images.IsEmpty())
             return;
-        _images = _prediction.FilterImages(Search, _images.Keys.ToArray());
+        _images = await _prediction.FilterImages(Search, _images.Keys.ToArray());
+        if (!_images.IsEmpty())
+            await _mediator.Publish(new SuccessfulLoadNotification());
     }
+
 
     private void Incorrect(string img)
     {
@@ -68,5 +73,6 @@
         _images[img] = true;
         _cache.AddPrediction(img, Search);
     }
+
 
 }

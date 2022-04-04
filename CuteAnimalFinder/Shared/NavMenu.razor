@@ -39,7 +39,7 @@
     private int _lastScrollTop = 0;
     private DotNetObjectReference<NavMenu>? _dotNetHelper;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         _dotNetHelper = DotNetObjectReference.Create(this);
         await _jsRuntime.InvokeAsync<Task>("onScrolled", _dotNetHelper);

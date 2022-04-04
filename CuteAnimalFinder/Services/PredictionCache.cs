@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using CuteAnimalFinder.Models;
+using CuteAnimalFinder.Notifications;
+using MediatR;
 using Microsoft.Data.SqlClient;
 
 namespace CuteAnimalFinder.Services;
@@ -8,22 +10,25 @@ public class PredictionCache : IPredictionCache
 {
     private readonly ILogger<PredictionCache> _logger;
     private readonly string _connectionString;
-    public PredictionCache(ILogger<PredictionCache> logger, IConfiguration config)
+    private readonly IMediator _mediator;
+    
+    public PredictionCache(ILogger<PredictionCache> logger, IConfiguration config, IMediator mediator)
     {
         _logger = logger;
+        _mediator = mediator;
         _connectionString = config.GetSection("PredictionCacheCS").Value!;
     }
 
     public void AddPrediction(string img, Animal prediction)
     {
-        using var connection = new SqlConnection(_connectionString);
-        var command = new SqlCommand("AddPrediction", connection);
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@url", img);
-        command.Parameters.AddWithValue("@prediction", (int) prediction);
-        connection.Open();
         try
         {
+            using var connection = new SqlConnection(_connectionString);
+            var command = new SqlCommand("AddPrediction", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@url", img);
+            command.Parameters.AddWithValue("@prediction", (int) prediction);
+            connection.Open();
             command.ExecuteNonQuery();
         }
         catch (SqlException e)
@@ -32,16 +37,16 @@ public class PredictionCache : IPredictionCache
         }
     }
 
-    Dictionary<string, Animal> IPredictionCache.GetPredictions(string[] images)
+    async Task<Dictionary<string, Animal>> IPredictionCache.GetPredictions(string[] images)
     {
         var predictions = new Dictionary<string, Animal>();
-        using var connection = new SqlConnection(_connectionString);
-        connection.Open();
-        var command = new SqlCommand("GetPredictions", connection);
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@urls", string.Join("|", images));
         try
         {
+            using var connection = new SqlConnection(_connectionString);
+            connection.Open();
+            var command = new SqlCommand("GetPredictions", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@urls", string.Join("|", images));
             using var objReader = command.ExecuteReader();
             if (!objReader.HasRows) return predictions;
             while (objReader.Read())
@@ -53,6 +58,7 @@ public class PredictionCache : IPredictionCache
         }
         catch (SqlException e)
         {
+            await _mediator.Publish(new SqlCrashNotification(e.Message));
             _logger.LogWarning("Sql exception on GetPredictions: {Message}", e.Message);
         }
         
@@ -63,6 +69,6 @@ public class PredictionCache : IPredictionCache
 
 public interface IPredictionCache
 {
-    Dictionary<string, Animal> GetPredictions(string[] images);
+    Task<Dictionary<string, Animal>> GetPredictions(string[] images);
     void AddPrediction(string img, Animal prediction);
 }
