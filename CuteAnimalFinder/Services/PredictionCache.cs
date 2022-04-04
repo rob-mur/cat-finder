@@ -1,30 +1,22 @@
 ﻿using System.Data;
-using System.Data.SqlClient;
 using CuteAnimalFinder.Models;
+using Microsoft.Data.SqlClient;
 
 namespace CuteAnimalFinder.Services;
 
 public class PredictionCache : IPredictionCache
 {
-    private readonly SqlConnectionStringBuilder _builder;
     private readonly ILogger<PredictionCache> _logger;
-
-    public PredictionCache(ILogger<PredictionCache> logger)
+    private readonly string _connectionString;
+    public PredictionCache(ILogger<PredictionCache> logger, IConfiguration config)
     {
         _logger = logger;
-        _builder = new SqlConnectionStringBuilder
-        {
-            DataSource = "prediction-cache.database.windows.net",
-            UserID = "verybasicusername",
-            Password = "verybasicpassword!1",
-            InitialCatalog = "prediction-cache",
-            ConnectTimeout = 0
-        };
+        _connectionString = config.GetSection("PredictionCacheCS").Value!;
     }
 
     public void AddPrediction(string img, Animal prediction)
     {
-        using var connection = new SqlConnection(_builder.ConnectionString);
+        using var connection = new SqlConnection(_connectionString);
         var command = new SqlCommand("AddPrediction", connection);
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@url", img);
@@ -43,7 +35,7 @@ public class PredictionCache : IPredictionCache
     Dictionary<string, Animal> IPredictionCache.GetPredictions(string[] images)
     {
         var predictions = new Dictionary<string, Animal>();
-        using var connection = new SqlConnection(_builder.ConnectionString);
+        using var connection = new SqlConnection(_connectionString);
         connection.Open();
         var command = new SqlCommand("GetPredictions", connection);
         command.CommandType = CommandType.StoredProcedure;
