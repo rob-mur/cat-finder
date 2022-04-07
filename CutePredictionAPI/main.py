@@ -60,11 +60,13 @@ async def download_files(temp_dir, urls):
             succeeded_downloads += 1
         except requests.exceptions.ConnectionError:
             print("Couldn't download file")
+        except requests.exceptions.ReadTimeout:
+            print("Couldn't download file")
     return succeeded_downloads
 
 
 async def download_file(i, temp_dir, url):
-    image_data = s.get(url, headers=headers).content
+    image_data = s.get(url, headers=headers, timeout=1).content
     file_name = os.path.join(temp_dir, str(i) + ".jpg")
     with open(file_name, 'wb') as tempFile:
         tempFile.write(image_data)
