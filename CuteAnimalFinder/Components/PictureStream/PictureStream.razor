@@ -25,10 +25,10 @@
                 <div class="card">
 
                 <div class="card-top">
-                    <div class="split-left" @onclick="() => Correct(key, idx)" disabled=@_isTaskRunning>
+                    <div class="split-left" @onclick="() => Correct(key, idx)">
                         <i class="bi bi-check" style="color:black"></i>
                     </div>
-                    <div class="split-right" @onclick="() => Incorrect(key)" disabled=@_isTaskRunning>
+                    <div class="split-right" @onclick="() => Incorrect(key, idx)">
                         <i class="bi bi-x" style="color:black"></i>
                     </div>
                 </div>
@@ -51,7 +51,7 @@
 
     private Dictionary<string, bool> _images = new();
 
-    private bool _isTaskRunning = false;
+    private Dictionary<int, bool> _isTaskRunning = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,33 +62,35 @@
         if (_images.IsEmpty())
             return;
         _images = await _prediction.FilterImages(Search, _images.Keys.ToArray());
+        for (int i = 0; i < _images.Count; i++)
+            _isTaskRunning[i] = false;
         if (!_images.IsEmpty())
             await _mediator.Publish(new SuccessfulLoadNotification());
     }
 
 
-    private void Incorrect(string img)
+    private void Incorrect(string img, int idx)
     {
-        if (_isTaskRunning)
+        if (_isTaskRunning[idx])
             return;
-        _isTaskRunning = true;
+        _isTaskRunning[idx] = true;
         _cache.AddPrediction(img, Animal.Neither);
         _images.Remove(img);
-        _isTaskRunning = false;
+        _isTaskRunning[idx] = false;
     }
 
     private async void Correct(string img, int idx)
     {
-        if (_isTaskRunning)
+        if (_isTaskRunning[idx])
             return;
-        _isTaskRunning = true;
+        _isTaskRunning[idx] = true;
         _images[img] = true;
         _cache.AddPrediction(img, Search);
         if (idx + 1 == _images.Count)
             return;
         var lookupId = $"image-{idx + 1}";
         await _js.InvokeVoidAsync("scrollToElement", lookupId);
-        _isTaskRunning = false;
+        _isTaskRunning[idx] = false;
     }
 
 
