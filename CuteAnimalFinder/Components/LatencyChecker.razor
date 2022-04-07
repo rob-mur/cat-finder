@@ -1,0 +1,18 @@
+﻿@inject IJSRuntime _js
+
+<span>Latency: @(Math.Round(_latency.TotalMilliseconds))ms</span>
+
+@code {
+    private DateTime _startTime;
+    private TimeSpan _latency;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.Delay(5000);   
+        _startTime = DateTime.UtcNow;
+        var _ = await _js.InvokeAsync<string>("toString");
+        _latency = DateTime.UtcNow - _startTime;
+        StateHasChanged();
+    }
+
+}
