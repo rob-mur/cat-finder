@@ -10,7 +10,14 @@
     {
         await Task.Delay(5000);   
         _startTime = DateTime.UtcNow;
-        var _ = await _js.InvokeAsync<string>("toString");
+        try
+        {
+            var _ = await _js.InvokeAsync<string>("toString");
+        }
+        catch (JSDisconnectedException e)
+        {
+            // do nothing
+        }
         _latency = DateTime.UtcNow - _startTime;
         StateHasChanged();
     }
