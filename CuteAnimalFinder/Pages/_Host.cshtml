@@ -11,15 +11,35 @@
 
 <script>
 
-window.onScrolled = (dotNetHelper)=>{
-    window.addEventListener("scroll",function (e){
-            dotNetHelper.invokeMethodAsync("OnScroll");
-    });
+let lastScrollTop = 0;
+
+window.onscroll = function (){
+    let bar = document.getElementById("navbar");
+    let inner = document.getElementById("navbar-inner");
+    let y = window.scrollY;
+    if (y !== lastScrollTop){
+        if (y < lastScrollTop){
+          bar.classList.add("scrolled-up");
+          bar.classList.remove("scrolled-down");
+          inner.classList.add("collapse");
+        } else {
+          bar.classList.add("scrolled-down");
+          bar.classList.remove("scrolled-up");
+          inner.classList.add("collapse");
+        }
+        lastScrollTop = y;
+    }
 }
 
-function getScrollY(){
-        return window.scrollY; 
+function toggleNavBar() {
+    let inner = document.getElementById("navbar-inner");
+    if (inner.classList.contains("collapse")){
+        inner.classList.remove("collapse");    
+    } else {
+        inner.classList.add("collapse");    
     }
+}
+
 </script>
 
 <script>

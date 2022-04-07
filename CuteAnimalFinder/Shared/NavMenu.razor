@@ -1,7 +1,6 @@
-﻿@inject IJSRuntime _jsRuntime
-@using CuteAnimalFinder.Components
+﻿@using CuteAnimalFinder.Components
 
-<div class="@NavMenuCssClass fixed-top purple" @onclick="ToggleNavMenu">
+<div class="fixed-top purple collapse"  id="navbar-inner">
     <div class="spacer">&nbsp;</div>
     <nav class="flex-column">
         <div class="nav-item px-3">
@@ -16,7 +15,7 @@
         </div>
     </nav>
 </div>
-<nav class="top-row ps-3 navbar navbar-dark fixed-top purple @_navBarScrollCssClass">
+<nav class="top-row ps-3 navbar navbar-dark fixed-top purple" id="navbar">
     <div class="container-fluid">
         <div class="justify-content-start">
             <div class="d-flex flex-row">
@@ -28,7 +27,7 @@
                 <div class="navbar-brand">
                     <LatencyChecker></LatencyChecker>
                 </div>
-                <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <button title="Navigation menu" class="navbar-toggler" onclick="toggleNavBar()">
                     <span class="navbar-toggler-icon"></span>
                 </button>
             </div>
@@ -36,43 +35,3 @@
     </div>
 </nav>
 <div class="spacer" id="end-of-nav-bar">&nbsp;</div>
-
-
-@code {
-    private bool _collapseNavMenu = true;
-    private string _navBarScrollCssClass = "scrolled-up";
-
-    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        _collapseNavMenu = !_collapseNavMenu;
-    }
-
-    private int _lastScrollTop = 0;
-    private DotNetObjectReference<NavMenu>? _dotNetHelper;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        _dotNetHelper = DotNetObjectReference.Create(this);
-        await _jsRuntime.InvokeAsync<Task>("onScrolled", _dotNetHelper);
-    }
-
-    [JSInvokable]
-    public async Task OnScroll()
-    {
-        _collapseNavMenu = true;
-        var scrollTop = await _jsRuntime.InvokeAsync<int>("getScrollY");
-        if (scrollTop != _lastScrollTop)
-            _navBarScrollCssClass = scrollTop < _lastScrollTop ? "scrolled-up" : "scrolled-down";
-    //Console.WriteLine($"Packet sent at {DateTime.Now} with y {_lastScrollTop} and calc {_navBarScrollCssClass}");
-        _lastScrollTop = scrollTop;
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        _dotNetHelper?.Dispose();
-    }
-
-}
