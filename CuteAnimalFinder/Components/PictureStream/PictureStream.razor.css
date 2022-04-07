@@ -1,6 +1,7 @@
 ﻿.card-holder {
     text-align: center;
     margin-bottom: 1rem;
+    max-height: 90vh;
 }
 
 .card {
@@ -8,19 +9,20 @@
     margin-left: auto;
     margin-right: auto;
     max-width: 90%;
+    max-height: 90vh;
     border-radius: 25px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .card-top {
     border-radius: 25px 25px 0 0;
-    height: 32px;
+    height: 5vh;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .split-left {
     border-radius: 25px 0 0 0;
-    height: 32px;
+    height: 5vh;
     width: 50%;
     float: left;
     background: #00ff00;
@@ -28,7 +30,7 @@
 
 .split-right {
     border-radius: 0 25px 0 0;
-    height: 32px;
+    height:5vh;
     width: 50%;
     float: right;
     background: #ff0000;
@@ -41,4 +43,6 @@
 .image {
     max-width: 100%;
     border-radius: 0 0 25px 25px;
+    max-height: 85vh;
 }
+

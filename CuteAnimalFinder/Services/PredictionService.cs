@@ -2,6 +2,7 @@
 using CuteAnimalFinder.Notifications;
 using MediatR;
 using Newtonsoft.Json;
+using Tweetinvi.Core.Extensions;
 
 namespace CuteAnimalFinder.Services;
 
@@ -24,7 +25,10 @@ public class Prediction : IPrediction
         var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
         await _mediator.Publish(new CacheNotification(relevantCache.Length));
         var unknownImages = images.Where(x => !cachedPredictions.ContainsKey(x)).ToArray();
+        await _mediator.Publish(new QueryApiNotifcation(unknownImages.Length));
         var result = await QueryPredictionApi(unknownImages);
+        if (result.IsEmpty())
+            return new Dictionary<string, bool>();
         var relevantImages = unknownImages.Where((_,i) => (Animal)result[i] == search).ToArray();
         var filterResult = new Dictionary<string, bool>();
         foreach (var img in relevantCache)
@@ -48,12 +52,12 @@ public class Prediction : IPrediction
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
             return Array.Empty<int>();
         }
-        catch (TaskCanceledException e)
+        catch (AggregateException e)
         {
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
             return Array.Empty<int>();
         }
-        var responseString = response.Content.ReadAsStringAsync().Result;
+        var responseString = await response.Content.ReadAsStringAsync();
         var result = JsonConvert.DeserializeObject<int[]>(responseString)!;
         return result;
     }

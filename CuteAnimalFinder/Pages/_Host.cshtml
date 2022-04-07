@@ -21,3 +21,11 @@ function getScrollY(){
         return window.scrollY; 
     }
 </script>
+
+<script>
+    function scrollToElement(id){
+            let elem = document.getElementById(id);
+            let topElem = document.getElementById("end-of-nav-bar");
+            document.documentElement.scrollTop = elem.getBoundingClientRect().top - topElem.getBoundingClientRect().bottom;
+        }
+</script>

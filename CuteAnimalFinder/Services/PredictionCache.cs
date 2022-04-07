@@ -42,12 +42,12 @@ public class PredictionCache : IPredictionCache
         var predictions = new Dictionary<string, Animal>();
         try
         {
-            using var connection = new SqlConnection(_connectionString);
+            await using var connection = new SqlConnection(_connectionString);
             connection.Open();
             var command = new SqlCommand("GetPredictions", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@urls", string.Join("|", images));
-            using var objReader = command.ExecuteReader();
+            await using var objReader = await command.ExecuteReaderAsync();
             if (!objReader.HasRows) return predictions;
             while (objReader.Read())
             {
