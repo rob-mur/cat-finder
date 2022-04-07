@@ -59,7 +59,7 @@ async def fetch_file(i, temp_dir, url):
         await download_file(i, temp_dir, url)
     except aiohttp.ClientConnectionError:
         print("Couldn't download file")
-    except aiohttp.ServerTimeoutError:
+    except asyncio.TimeoutError:
         print("Couldn't download file")
 
 
