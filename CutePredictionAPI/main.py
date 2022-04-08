@@ -38,6 +38,9 @@ async def make_predictions(urls):
         interpreter.resize_tensor_input(0, [len(os.listdir(input_path)), 150, 150, 3])
         interpreter.allocate_tensors()
         image_names = os.listdir(input_path)
+        if len(image_names) == 0:
+            print("Couldn't download any")
+            return predictions
         images = [img_to_array(load_img(os.path.join(input_path, x), target_size=(150, 150))) for x in image_names]
         interpreter.set_tensor(0, images)
         interpreter.invoke()
@@ -60,13 +63,14 @@ async def fetch_file(i, temp_dir, url):
     except aiohttp.ClientConnectionError:
         print("Couldn't download file")
     except asyncio.TimeoutError:
+        os.remove(os.path.join(temp_dir, str(i) + ".jpg"))
         print("Couldn't download file")
 
 
 async def download_file(i, temp_dir, url):
     file_name = os.path.join(temp_dir, str(i) + ".jpg")
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers, timeout=1) as resp:
+        async with session.get(url, headers=headers) as resp:
             f = await aiofiles.open(file_name, mode='wb')
             await f.write(await resp.read())
             await f.close()
