@@ -8,20 +8,23 @@ namespace CuteAnimalFinder.Services;
 
 public class Prediction : IPrediction
 {
-    private readonly IPredictionCache _cache;
     private readonly string _predictionUrl;
     private readonly IMediator _mediator;
+    private readonly IConfiguration _config;
 
-    public Prediction(IConfiguration config, IPredictionCache cache, IMediator mediator)
+    public Prediction(IConfiguration config, IMediator mediator)
     {
-        _cache = cache;
+        _config = config;
         _mediator = mediator;
         _predictionUrl = config.GetSection("PredictionURL").Value!;
     }
 
     public async Task<Dictionary<string, bool>> FilterImages(Animal search, string[] images)
     {
-        var cachedPredictions = await _cache.GetPredictions(images);
+        await using var dbContext = new PredictionDbContext(_config);
+        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).GroupBy(x => x.Url)
+            .Select(x => x.First())
+            .ToDictionary(x => x!.Url, x => (Animal) x!.Prediction);
         var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
         await _mediator.Publish(new CacheNotification(relevantCache.Length));
         var unknownImages = images.Where(x => !cachedPredictions.ContainsKey(x)).ToArray();
@@ -29,7 +32,7 @@ public class Prediction : IPrediction
         var result = await QueryPredictionApi(unknownImages);
         if (result.IsEmpty())
             return new Dictionary<string, bool>();
-        var relevantImages = unknownImages.Where((_,i) => (Animal)result[i] == search).ToArray();
+        var relevantImages = unknownImages.Where((_, i) => (Animal) result[i] == search).ToArray();
         var filterResult = new Dictionary<string, bool>();
         foreach (var img in relevantCache)
             filterResult[img.Key] = true;
@@ -57,6 +60,7 @@ public class Prediction : IPrediction
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
             return Array.Empty<int>();
         }
+
         var responseString = await response.Content.ReadAsStringAsync();
         var result = JsonConvert.DeserializeObject<int[]>(responseString)!;
         return result;

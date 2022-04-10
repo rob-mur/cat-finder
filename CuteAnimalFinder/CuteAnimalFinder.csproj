@@ -14,6 +14,8 @@
         <PackageReference Include="MediatR" Version="10.0.1" />
         <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.3" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0-preview.1.22076.8" />
         <PackageReference Include="TweetinviAPI" Version="5.0.4" />
     </ItemGroup>

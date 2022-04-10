@@ -14,7 +14,7 @@
         {
             var _ = await _js.InvokeAsync<string>("toString");
         }
-        catch (JSDisconnectedException e)
+        catch (JSDisconnectedException)
         {
             // do nothing
         }
