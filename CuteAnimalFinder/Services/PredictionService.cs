@@ -1,6 +1,7 @@
 ﻿using CuteAnimalFinder.Models;
 using CuteAnimalFinder.Notifications;
 using MediatR;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Tweetinvi.Core.Extensions;
 
@@ -22,8 +23,12 @@ public class Prediction : IPrediction
     public async Task<Dictionary<string, bool>> FilterImages(Animal search, string[] images)
     {
         await using var dbContext = new PredictionDbContext(_config);
-        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).GroupBy(x => x.Url)
-            .Select(x => x.First())
+        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).ToArray().GroupBy(x => x.Url, (_, group) =>
+            {
+                var predictedImages = @group as PredictedImage[] ?? @group.ToArray();
+                var max = predictedImages.Max(x => x.Prediction);
+                return predictedImages.First(x => x.Prediction == max);
+            })
             .ToDictionary(x => x!.Url, x => (Animal) x!.Prediction);
         var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
         await _mediator.Publish(new CacheNotification(relevantCache.Length));
