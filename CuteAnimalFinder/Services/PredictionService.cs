@@ -33,7 +33,7 @@ public class Prediction : IPrediction
         var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
         await _mediator.Publish(new CacheNotification(relevantCache.Length));
         var unknownImages = images.Where(x => !cachedPredictions.ContainsKey(x)).ToArray();
-        await _mediator.Publish(new QueryApiNotifcation(unknownImages.Length));
+        await _mediator.Publish(new QueryApiNotification(unknownImages.Length));
         var result = await QueryPredictionApi(unknownImages);
         if (result.IsEmpty())
             return new Dictionary<string, bool>();

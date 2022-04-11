@@ -2,9 +2,9 @@
 
 namespace CuteAnimalFinder.Notifications;
 
-public class QueryApiNotifcation : INotification
+public class QueryApiNotification : INotification
 {
-    public QueryApiNotifcation(int count)
+    public QueryApiNotification(int count)
     {
         Count = count;
     }

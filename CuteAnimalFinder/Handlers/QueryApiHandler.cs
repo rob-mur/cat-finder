@@ -4,7 +4,7 @@ using MediatR;
 
 namespace CuteAnimalFinder.Handlers;
 
-public class QueryApiHandler : INotificationHandler<QueryApiNotifcation>
+public class QueryApiHandler : INotificationHandler<QueryApiNotification>
 {
     private readonly IComponentStateService _state;
 
@@ -13,7 +13,7 @@ public class QueryApiHandler : INotificationHandler<QueryApiNotifcation>
         _state = state;
     }
 
-    public Task Handle(QueryApiNotifcation notification, CancellationToken cancellationToken)
+    public Task Handle(QueryApiNotification notification, CancellationToken cancellationToken)
     {
         _state.ErrorQueue.Messages.Add($"Querying the deep learning API for {notification.Count} images");
         _state.ErrorQueue.Refresh();
