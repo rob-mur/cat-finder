@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace CuteAnimalFinder;
 
@@ -20,9 +21,9 @@ public class PredictionDbContext :  DbContext
     }
 }
 
-[Keyless]
 public  class PredictedImage
 {
+    [Key]
     public string Url { get; init; } = null!;
     public int Prediction { get; init; }
 }

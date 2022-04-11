@@ -85,7 +85,7 @@
             return;
         _isTaskRunning[idx] = true;
         _images[img] = true;
-        using var ctx = new PredictionDbContext(_config);
+        await using var ctx = new PredictionDbContext(_config);
         ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = (int) Search});
         if (idx + 1 == _images.Count)
             return;
