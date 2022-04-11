@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using CuteAnimalFinder.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CuteAnimalFinder;
@@ -25,5 +26,5 @@ public  class PredictedImage
 {
     [Key]
     public string Url { get; init; } = null!;
-    public int Prediction { get; init; }
+    public Animal Prediction { get; init; }
 }

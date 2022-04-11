@@ -73,7 +73,7 @@
     private void Incorrect(string img, int idx)
     {
         using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = (int) Animal.Neither});
+        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = Animal.Neither});
         _images.Remove(img);
     }
 
@@ -81,7 +81,7 @@
     {
         _images[img] = true;
         await using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = (int) Search});
+        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = Search});
         if (idx + 1 == _images.Count)
             return;
         var lookupId = $"image-{idx + 1}";
