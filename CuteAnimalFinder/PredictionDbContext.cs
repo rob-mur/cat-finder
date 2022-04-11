@@ -8,7 +8,7 @@ public class PredictionDbContext :  DbContext
 {
     private readonly string _connectionString;
 
-    public DbSet<PredictedImage> Predictions { get; set; } = null!;
+    public DbSet<ImagePrediction> Predictions { get; set; } = null!;
 
     public PredictionDbContext(IConfiguration config)
     {
@@ -22,9 +22,15 @@ public class PredictionDbContext :  DbContext
     }
 }
 
-public  class PredictedImage
+public class ImagePrediction
 {
     [Key]
-    public string Url { get; init; } = null!;
+    public string Url { get; init; }
     public Animal Prediction { get; init; }
+
+    public ImagePrediction(string url, Animal prediction)
+    {
+        Url = url;
+        Prediction = prediction;
+    }
 }

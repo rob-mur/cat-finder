@@ -15,31 +15,30 @@
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
-@for (int i = 0; i < _images.Count; i++)
+@for (var i = 0 ; i < _votes.Count; i++)
 {
-    var (key, value) = _images.ElementAt(i);
+    var vote = _votes[i];
     var idx = i;
-    <div class="card-holder" id=@($"image-{i}")>
-            @if (!value)
-            {
-                <div class="card">
+    <div class="card-holder" id=@($"image-{idx}")>
+        @if (!vote.HasVoted)
+        {
+            <div class="card">
 
                 <div class="card-top">
-                    <div class="split-left" @onclick="() => _voteCorrect.Invoke((key, idx))">
+                    <div class="split-left" @onclick="() => _voteCorrect.Invoke(vote)">
                         <i class="bi bi-check" style="color:black"></i>
                     </div>
-                    <div class="split-right" @onclick="() => _voteIncorrect.Invoke((key, idx))">
+                    <div class="split-right" @onclick="() => _voteIncorrect.Invoke(vote)">
                         <i class="bi bi-x" style="color:black"></i>
                     </div>
                 </div>
-                <img src=@key alt="" class="image">
-                                                      </div>
-
-            }
-            else
-            {
-                <img src=@key alt="" class="card">
-            }
+                <img src=@vote.Value alt="" class="image">
+            </div>
+        }
+        else
+        {
+            <img src=@vote.Value alt="" class="card">
+        }
     </div>
 }
 
@@ -48,41 +47,45 @@
 
     [Parameter]
     public Animal Search { get; set; }
-    
-    private Dictionary<string, bool> _images = new();
 
-    private Once<(string, int)> _voteIncorrect = null!;
-    private Once<(string, int)> _voteCorrect = null!;
+    private List<Vote<string>> _votes = new();
+
+    private Once<Vote<string>> _voteIncorrect = null!;
+    private Once<Vote<string>> _voteCorrect = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        _voteIncorrect = new Once<(string, int)>(x => Incorrect(x.Item1, x.Item2));
-        _voteCorrect = new Once<(string, int)>(x => Correct(x.Item1, x.Item2));
+        _voteIncorrect = new Once<Vote<string>>(Incorrect);
+        _voteCorrect = new Once<Vote<string>>(Correct);
+
         var result = await _sources.GetLatestPictures(Search);
-        _logger.LogInformation("Requested pictures:");
-        result.ForEach(url => _logger.LogInformation("{Url}",url));
-        _images = result.ToDictionary(x => x, _ => false);
-        if (_images.IsEmpty())
+        if (result.IsEmpty())
             return;
-        _images = await _prediction.FilterImages(Search, _images.Keys.ToArray());
-        if (!_images.IsEmpty())
+
+        _logger.LogInformation("Requested pictures:");
+        result.ForEach(url => _logger.LogInformation("{Url}", url));
+
+        var filtered = await _prediction.FilterImages(Search, result);
+        _votes = filtered.Select(x => new Vote<string>(x)).ToList();
+        if (!_votes.IsEmpty())
             await _mediator.Publish(new SuccessfulLoadNotification());
     }
 
 
-    private void Incorrect(string img, int idx)
+    private void Incorrect(Vote<string> vote)
     {
         using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = Animal.Neither});
-        _images.Remove(img);
+        ctx.Predictions.Add(new ImagePrediction(vote.Value, Animal.Neither));
+        _votes.Remove(vote);
     }
 
-    private async void Correct(string img, int idx)
+    private async void Correct(Vote<string> vote)
     {
-        _images[img] = true;
+        vote.Cast();
         await using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new PredictedImage {Url = img, Prediction = Search});
-        if (idx + 1 == _images.Count)
+        ctx.Predictions.Add(new ImagePrediction(vote.Value, Search));
+        var idx = _votes.IndexOf(vote);
+        if (idx == _votes.Count - 1)
             return;
         var lookupId = $"image-{idx + 1}";
         await _js.InvokeVoidAsync("scrollToElement", lookupId);

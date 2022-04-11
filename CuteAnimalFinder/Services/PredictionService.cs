@@ -20,33 +20,31 @@ public class Prediction : IPrediction
         _predictionUrl = config.GetSection("PredictionURL").Value!;
     }
 
-    public async Task<Dictionary<string, bool>> FilterImages(Animal search, string[] images)
+    public async Task<List<string>> FilterImages(Animal search, string[] images)
     {
         await using var dbContext = new PredictionDbContext(_config);
-        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).ToArray().GroupBy(x => x.Url, (_, group) =>
+        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).ToArray().GroupBy(x => x.Url,
+            (_, group) =>
             {
-                var predictedImages = @group as PredictedImage[] ?? @group.ToArray();
+                var predictedImages = @group as ImagePrediction[] ?? @group.ToArray();
                 var max = predictedImages.Max(x => x.Prediction);
                 return predictedImages.First(x => x.Prediction == max);
-            })
-            .ToDictionary(x => x!.Url, x => (Animal) x!.Prediction);
-        var relevantCache = cachedPredictions.Where(x => x.Value == search).ToArray();
-        await _mediator.Publish(new CacheNotification(relevantCache.Length));
-        var unknownImages = images.Where(x => !cachedPredictions.ContainsKey(x)).ToArray();
+            }).ToArray();
+
+        await _mediator.Publish(new CacheNotification(cachedPredictions.Length));
+
+        var unknownImages = images
+            .Where(x => !cachedPredictions.Select(imagePrediction => imagePrediction.Url).Contains(x)).ToArray();
         await _mediator.Publish(new QueryApiNotification(unknownImages.Length));
+
         var result = await QueryPredictionApi(unknownImages);
-        if (result.IsEmpty())
-            return new Dictionary<string, bool>();
-        var relevantImages = unknownImages.Where((_, i) => (Animal) result[i] == search).ToArray();
-        var filterResult = new Dictionary<string, bool>();
-        foreach (var img in relevantCache)
-            filterResult[img.Key] = true;
-        foreach (var img in relevantImages)
-            filterResult[img] = false;
-        return filterResult;
+        
+        return result.IsEmpty()
+            ? new List<string>()
+            : result.Concat(cachedPredictions).Where(x => x.Prediction == search).Select(x => x.Url).ToList();
     }
 
-    private async Task<int[]> QueryPredictionApi(string[] images)
+    private async Task<ImagePrediction[]> QueryPredictionApi(string[] images)
     {
         var query = "?urls=" + string.Join("&urls=", images);
         using var client = new HttpClient();
@@ -58,21 +56,21 @@ public class Prediction : IPrediction
         catch (HttpRequestException e)
         {
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
-            return Array.Empty<int>();
+            return Array.Empty<ImagePrediction>();
         }
         catch (AggregateException e)
         {
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
-            return Array.Empty<int>();
+            return Array.Empty<ImagePrediction>();
         }
 
         var responseString = await response.Content.ReadAsStringAsync();
-        var result = JsonConvert.DeserializeObject<int[]>(responseString)!;
-        return result;
+        var result = JsonConvert.DeserializeObject<Animal[]>(responseString)!;
+        return images.Zip(result).Select((x, _) => new ImagePrediction(x.First, x.Second)).ToArray();
     }
 }
 
 public interface IPrediction
 {
-    Task<Dictionary<string, bool>> FilterImages(Animal search, string[] images);
+    Task<List<string>> FilterImages(Animal search, string[] images);
 }
