@@ -20,6 +20,12 @@ public class PredictionDbContext :  DbContext
         optionsBuilder.UseSqlServer(_connectionString);
         
     }
+    
+    private Task AddPrediction(ImagePrediction prediction)
+    {
+        Predictions.Add(prediction);
+        return Task.CompletedTask;
+    }
 }
 
 public class ImagePrediction

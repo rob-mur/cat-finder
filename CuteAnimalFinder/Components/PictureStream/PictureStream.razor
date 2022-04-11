@@ -12,6 +12,7 @@
 @inject IComponentStateService _state
 @inject IJSRuntime _js
 @inject IConfiguration _config
+@inject IDbService _db
 
 <PageTitle>CuteAnimalFinder</PageTitle>
 
@@ -25,10 +26,10 @@
             <div class="card">
 
                 <div class="card-top">
-                    <div class="split-left" @onclick="() => _voteCorrect.Invoke(vote)">
+                    <div class="split-left" @onclick="async () => await _voteCorrect.Invoke(vote)">
                         <i class="bi bi-check" style="color:black"></i>
                     </div>
-                    <div class="split-right" @onclick="() => _voteIncorrect.Invoke(vote)">
+                    <div class="split-right" @onclick="async () => await _voteIncorrect.Invoke(vote)">
                         <i class="bi bi-x" style="color:black"></i>
                     </div>
                 </div>
@@ -72,24 +73,24 @@
     }
 
 
-    private void Incorrect(Vote<string> vote)
-    {
-        using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new ImagePrediction(vote.Value, Animal.Neither));
+    private async Task Incorrect(Vote<string> vote)
+   {
+        await Task.Run(() => _db.AddPrediction(new ImagePrediction(vote.Value, Animal.Neither)));
         _votes.Remove(vote);
-    }
+   }
 
-    private async void Correct(Vote<string> vote)
+    private async Task Correct(Vote<string> vote)
     {
+        await _db.AddPrediction(new ImagePrediction(vote.Value, Search));
         vote.Cast();
-        await using var ctx = new PredictionDbContext(_config);
-        ctx.Predictions.Add(new ImagePrediction(vote.Value, Search));
         var idx = _votes.IndexOf(vote);
         if (idx == _votes.Count - 1)
             return;
         var lookupId = $"image-{idx + 1}";
         await _js.InvokeVoidAsync("scrollToElement", lookupId);
     }
+
+    
 
 
 }
