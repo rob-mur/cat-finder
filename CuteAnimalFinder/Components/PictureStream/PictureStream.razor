@@ -4,6 +4,7 @@
 @using CuteAnimalFinder.Notifications
 @using MediatR
 @using CuteAnimalFinder.Extensions
+@using ImagePrediction = CuteAnimalFinder.Models.ImagePrediction
 @namespace CuteAnimalFinder.Components.PictureStream
 @inject ISources _sources
 @inject IPrediction _prediction
@@ -75,19 +76,20 @@
 
     private async Task Incorrect(Vote<string> vote)
    {
-        await Task.Run(() => _db.AddPrediction(new ImagePrediction(vote.Value, Animal.Neither)));
         _votes.Remove(vote);
+        await _db.AddPrediction(new ImagePrediction(vote.Value, Animal.Neither));
    }
 
     private async Task Correct(Vote<string> vote)
     {
-        await _db.AddPrediction(new ImagePrediction(vote.Value, Search));
         vote.Cast();
         var idx = _votes.IndexOf(vote);
         if (idx == _votes.Count - 1)
             return;
         var lookupId = $"image-{idx + 1}";
         await _js.InvokeVoidAsync("scrollToElement", lookupId);
+        await _db.AddPrediction(new ImagePrediction(vote.Value, Search));
+
     }
 
     

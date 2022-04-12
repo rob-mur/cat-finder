@@ -5,40 +5,49 @@ namespace CuteAnimalFinder.Services;
 
 public class DbService: IDbService
 {
-    private readonly PredictionDbContext _db;
+
+    private readonly IConfiguration _config;
     public DbService(IConfiguration config)
     {
-        _db = new PredictionDbContext(config);
+        _config = config;
     }
-    public async Task AddPrediction(ImagePrediction imagePrediction)
+    public async Task AddPrediction(Models.ImagePrediction imagePrediction)
     {
-        _db.Predictions.Add(imagePrediction);
-        using var client = new HttpClient();
-        using var response = await client.GetAsync(imagePrediction.Url);
-        var imageBytes = await response.Content.ReadAsByteArrayAsync();
-        var sha1 = SHA1.HashData(imageBytes);
-        var existingRecord = _db.NewPredictions.FirstOrDefault(x => x.Sha1 == sha1);
-        if (existingRecord != null)
+        try
         {
-            existingRecord.Votes[imagePrediction.Prediction] += 1;
-            await _db.SaveChangesAsync();
-        }
-        else
-        {
-            var newRecord = new NewImagePrediction(sha1, new Dictionary<Animal, int>()
+            await using var ctx = new PredictionDbContext(_config);
+            using var client = new HttpClient();
+            using var response = await client.GetAsync(imagePrediction.Url);
+            var imageBytes = await response.Content.ReadAsByteArrayAsync();
+            var sha1 = SHA1.HashData(imageBytes);
+            var existingRecord = ctx.Predictions.FirstOrDefault(x => x.Sha1 == sha1);
+            if (existingRecord != null)
             {
-                {Animal.Cat, 0},
-                {Animal.Dog, 0},
-                {Animal.Neither, 0}
-            });
-            newRecord.Votes[imagePrediction.Prediction] += 1;
-            await _db.AddAsync(newRecord);
-            await _db.SaveChangesAsync();
+                existingRecord.Votes[imagePrediction.Prediction] += 1;
+                await ctx.SaveChangesAsync();
+            }
+            else
+            {
+                var newRecord = new ImagePrediction(sha1, new Dictionary<Animal, int>()
+                {
+                    {Animal.Cat, 0},
+                    {Animal.Dog, 0},
+                    {Animal.Neither, 0}
+                }, imagePrediction.Url!);
+                newRecord.Votes[imagePrediction.Prediction] += 1;
+                await ctx.AddAsync(newRecord);
+                await ctx.SaveChangesAsync();
+            }
         }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine(e);
+        }
+        
     }
 }
 
 public interface IDbService
 {
-    Task AddPrediction(ImagePrediction imagePrediction);
+    Task AddPrediction(Models.ImagePrediction imagePrediction);
 }
