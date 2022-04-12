@@ -27,10 +27,10 @@
             <div class="card">
 
                 <div class="card-top">
-                    <div class="split-left" @onclick="async () => await _voteCorrect.Invoke(vote)">
+                    <div class="split-left" @onclick="async () =>await  _voteCorrect.Invoke(vote)">
                         <i class="bi bi-check" style="color:black"></i>
                     </div>
-                    <div class="split-right" @onclick="async () => await _voteIncorrect.Invoke(vote)">
+                    <div class="split-right" @onclick="() =>  _voteIncorrect.Invoke(vote)">
                         <i class="bi bi-x" style="color:black"></i>
                     </div>
                 </div>
@@ -74,10 +74,11 @@
     }
 
 
-    private async Task Incorrect(Vote<string> vote)
+    private Task Incorrect(Vote<string> vote)
    {
         _votes.Remove(vote);
-        await _db.AddPrediction(new ImagePrediction(vote.Value, Animal.Neither));
+        _db.AddPrediction(new ImagePrediction(vote.Value, Animal.Neither));
+        return Task.CompletedTask;
    }
 
     private async Task Correct(Vote<string> vote)
@@ -88,7 +89,7 @@
             return;
         var lookupId = $"image-{idx + 1}";
         await _js.InvokeVoidAsync("scrollToElement", lookupId);
-        await _db.AddPrediction(new ImagePrediction(vote.Value, Search));
+        _db.AddPrediction(new ImagePrediction(vote.Value, Search));
 
     }
 

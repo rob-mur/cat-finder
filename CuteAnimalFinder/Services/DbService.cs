@@ -11,7 +11,8 @@ public class DbService: IDbService
     {
         _config = config;
     }
-    public async Task AddPrediction(Models.ImagePrediction imagePrediction)
+
+    private async Task AddPredictionBackground(Models.ImagePrediction imagePrediction)
     {
         try
         {
@@ -45,9 +46,14 @@ public class DbService: IDbService
         }
         
     }
+
+    public void AddPrediction(Models.ImagePrediction imagePrediction)
+    {
+        Task.Run(() => AddPredictionBackground(imagePrediction));
+    }
 }
 
 public interface IDbService
 {
-    Task AddPrediction(Models.ImagePrediction imagePrediction);
+    void AddPrediction(Models.ImagePrediction imagePrediction);
 }
