@@ -11,7 +11,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<ISources, TwitterService>();
 builder.Services.AddScoped<IPrediction, Prediction>();
 builder.Services.AddScoped<IComponentStateService, ComponentStateService>();
-builder.Services.AddSingleton<IDbService, DbService>();
+builder.Services.AddScoped<IDbService, DbService>();
 builder.Services.AddMediatR(cfg => cfg.AsScoped(), typeof(Program));
 
 

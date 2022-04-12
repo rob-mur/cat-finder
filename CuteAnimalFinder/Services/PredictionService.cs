@@ -12,39 +12,26 @@ public class Prediction : IPrediction
     private readonly string _predictionUrl;
     private readonly IMediator _mediator;
     private readonly IConfiguration _config;
+    private readonly IDbService _db;
 
-    public Prediction(IConfiguration config, IMediator mediator)
+    public Prediction(IConfiguration config, IMediator mediator, IDbService db)
     {
         _config = config;
         _mediator = mediator;
+        _db = db;
         _predictionUrl = config.GetSection("PredictionURL").Value!;
     }
 
     public async Task<List<string>> FilterImages(Animal search, string[] images)
     {
-        await using var dbContext = new PredictionDbContext(_config);
-        var cachedPredictions = dbContext.Predictions.Where(x => images.Contains(x.Url)).ToArray().GroupBy(x => x.Url,
-            (_, group) =>
-            {
-                var predictedImages = @group as ImagePrediction[] ?? @group.ToArray();
-                var max = predictedImages.Max(x => x.Prediction);
-                return predictedImages.First(x => x.Prediction == max);
-            }).ToArray();
+        await _mediator.Publish(new QueryApiNotification(images.Length));
 
-        await _mediator.Publish(new CacheNotification(cachedPredictions.Length));
-
-        var unknownImages = images
-            .Where(x => !cachedPredictions.Select(imagePrediction => imagePrediction.Url).Contains(x)).ToArray();
-        await _mediator.Publish(new QueryApiNotification(unknownImages.Length));
-
-        var result = await QueryPredictionApi(unknownImages);
+        var result = await QueryPredictionApi(images);
         
-        return result.IsEmpty()
-            ? new List<string>()
-            : result.Concat(cachedPredictions).Where(x => x.Prediction == search).Select(x => x.Url).ToList();
+        return result.Where(x => x.Prediction == search).Select(x => x.Url).ToList()!;
     }
 
-    private async Task<ImagePrediction[]> QueryPredictionApi(string[] images)
+    private async Task<Models.ImagePrediction[]> QueryPredictionApi(string[] images)
     {
         var query = "?urls=" + string.Join("&urls=", images);
         using var client = new HttpClient();
@@ -56,17 +43,17 @@ public class Prediction : IPrediction
         catch (HttpRequestException e)
         {
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
-            return Array.Empty<ImagePrediction>();
+            return Array.Empty<Models.ImagePrediction>();
         }
         catch (AggregateException e)
         {
             await _mediator.Publish(new PredictionQueryFailedNotification(e.Message));
-            return Array.Empty<ImagePrediction>();
+            return Array.Empty<Models.ImagePrediction>();
         }
 
         var responseString = await response.Content.ReadAsStringAsync();
         var result = JsonConvert.DeserializeObject<Animal[]>(responseString)!;
-        return images.Zip(result).Select((x, _) => new ImagePrediction(x.First, x.Second)).ToArray();
+        return images.Zip(result).Select((x, _) => new Models.ImagePrediction(x.First, x.Second)).ToArray();
     }
 }
 
