@@ -40,3 +40,9 @@ public class ImagePrediction
         Prediction = prediction;
     }
 }
+
+public class NewImagePrediction
+{
+    [Key]
+    public byte[20] Sha1Hash {get;}
+}

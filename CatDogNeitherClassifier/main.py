@@ -21,6 +21,8 @@ from tensorflow.python.framework.convert_to_constants import convert_variables_t
 import pandas as pd
 from random import randint
 from requests.adapters import HTTPAdapter, Retry
+import json
+import ast
 
 tf.compat.v1.disable_eager_execution()
 config = tf.compat.v1.ConfigProto()
@@ -29,9 +31,9 @@ session = tf.compat.v1.Session(config=config)
 K.set_session(session)
 
 prediction_key = {
-    0: "cats",
-    1: "dogs",
-    2: "neither"
+    "Cat": "cats",
+    "Dog": "dogs",
+    "Neither": "neither"
 }
 
 tqdm.pandas()
@@ -144,6 +146,9 @@ def get_new_predictions():
     prune_folder(resTestRoot)
     # Download files to new folders, with 25% test split
     prediction_data = pd.read_csv("prediction_cache_dbo_Predictions.csv")
+    prediction_data = prediction_data.join(prediction_data['Votes'].apply(json.loads).apply(pd.Series))
+    prediction_data['Prediction'] = prediction_data['Votes'].apply(lambda x: max(ast.literal_eval(x),
+                                                                                 key=ast.literal_eval(x).get))
     prediction_data['name'] = "downloaded_" + prediction_data.index.astype(str) + ".jpg"
     print("Downloading new predictions")
     prediction_data.progress_apply(lambda x: download_file(x), axis=1)
@@ -161,7 +166,7 @@ def download_file(x):
     s.mount('http://', HTTPAdapter(max_retries=retries))
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:24.0) Gecko/20100101 Firefox/24.0'}
     try:
-        image_data = s.get(x['Url'], headers=headers).content
+        image_data = s.get(x['ExampleUrl'], headers=headers).content
     except requests.exceptions.ConnectionError:
         print("Couldn't download file")
         return
