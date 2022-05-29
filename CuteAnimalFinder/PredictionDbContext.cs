@@ -3,31 +3,25 @@ using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 using CuteAnimalFinder.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 
 namespace CuteAnimalFinder;
 
 public class PredictionDbContext : DbContext
 {
-    private readonly string _connectionString;
     public DbSet<ImagePrediction> Predictions { get; init; } = null!;
 
-    public PredictionDbContext(IConfiguration config)
+    public PredictionDbContext(DbContextOptions<PredictionDbContext> options) : base(options)
     {
-        _connectionString = config.GetSection("PredictionCacheCS").Value!;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ImagePrediction>().Property(b => b.Votes).HasConversion(
-            v => JsonConvert.SerializeObject(v), v => JsonConvert.DeserializeObject<Dictionary<Animal, int>>(v));
+            v => JsonConvert.SerializeObject(v), v => JsonConvert.DeserializeObject<Dictionary<Animal, int>>(v),
+            ValueComparer.CreateDefault(typeof(Dictionary<Animal, int>), true));
     }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlServer(_connectionString);
-    }
-
 }
 
 public class ImagePrediction
@@ -42,6 +36,6 @@ public class ImagePrediction
     [Key] public byte[] Sha1 { get; init; }
 
     public Dictionary<Animal, int> Votes { get; init; }
-    
+
     public string ExampleUrl { get; init; }
 }

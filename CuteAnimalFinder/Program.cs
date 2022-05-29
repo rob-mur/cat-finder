@@ -1,6 +1,8 @@
 using Azure.Identity;
+using CuteAnimalFinder;
 using CuteAnimalFinder.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -13,6 +15,12 @@ builder.Services.AddScoped<IPrediction, Prediction>();
 builder.Services.AddScoped<IComponentStateService, ComponentStateService>();
 builder.Services.AddScoped<IDbService, DbService>();
 builder.Services.AddMediatR(cfg => cfg.AsScoped(), typeof(Program));
+
+var connString = builder.Configuration.GetSection("PredictionCacheCS").Value!;
+builder.Services.AddDbContext<PredictionDbContext>(dbContextOptions => dbContextOptions.UseMySql(connString,
+    ServerVersion.AutoDetect(connString), options => options.EnableRetryOnFailure(maxRetryCount: 5,
+        maxRetryDelay: System.TimeSpan.FromSeconds(30),
+        errorNumbersToAdd: null)));
 
 
 if (builder.Environment.IsProduction())
